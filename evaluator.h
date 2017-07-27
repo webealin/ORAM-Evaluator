@@ -15,7 +15,7 @@ public:
         uint16_t B;
         uint16_t c;
         uint16_t count;
-        uint64_t out;
+        outType* out;
     };
 
     struct pathSettings {
@@ -35,10 +35,10 @@ private:
     outType& find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b);
 
     Evaluator::btSettings* find_best_BT(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam,
-            uint64_t (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t count));
+            outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t count));
 
     Evaluator::pathSettings* find_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
-                                   uint64_t (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t stash, uint16_t count));
+                                   outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t stash, uint16_t count));
 public:
     void evaluate_exact(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
     void evaluate_exact_fast(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);

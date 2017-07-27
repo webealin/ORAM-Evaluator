@@ -15,6 +15,8 @@ struct outType {
     uint64_t rounds;
 };
 
+// TODO: hier Overflow Behandlung wieder einfügen
+
 inline outType& operator+ (const outType& a, const outType& b) {
     outType* out = new outType;
     *out = {a.gates + b.gates, a.traffic + b.traffic, a.rounds + b.rounds};
@@ -47,6 +49,13 @@ inline outType& operator/ (const outType& b, const uint64_t d) {
     delete &b;
 
     return *out;
+}
+
+inline bool operator< (const outType& a, const outType& b) {
+    bool out = a.gates < b.gates;       // TODO
+    //delete &a;
+    //delete &b;
+    return out;
 }
 
 inline std::ostream& operator<<(std::ostream& ostr, const outType& i) {

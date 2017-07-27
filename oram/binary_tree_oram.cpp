@@ -28,7 +28,7 @@ void TreeInterface::build(uint16_t counter) {
 
     if(counter > 0 && m > c) {
         map = createMap(newM);
-        ((TreeInterface*) map)->build(counter-1);
+        ((TreeInterface*) map)->build((uint16_t) (counter-1));
     }
     else map = createLSMap(newM);
 
@@ -51,7 +51,7 @@ outType& TreeInterface::c_init(bool values) {
  */
 outType& TreeInterface::c_evict() {
     // sum(2 to d-1: 2*rand(i))+(2*d-3)(pop_BO(B, bb)+dChild(bb)+2*add_BO(B, bb))
-    return (2*d-3)*(buckets->c_pop()+c_condSwap(bb)+2*buckets->c_add());        // TODO summe
+    return (2*d-3)*(buckets->c_pop()+c_condSwap(bb)+2*buckets->c_add());        // TODO summe (wegen dem rand)
 }
 
 /**

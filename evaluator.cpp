@@ -6,7 +6,7 @@
 #include "fast_calculator.h"
 
 outType& Evaluator::find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
-    outType out = noRead * LinearScan::read(m, b) + noWrite * LinearScan::write(m, b);
+    outType& out = noRead * LinearScan::read(m, b) + noWrite * LinearScan::write(m, b);
     std::cout << "Linear Scan: " << out << std::endl;
     return out;
 }
@@ -20,107 +20,114 @@ outType& Evaluator::find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b) 
 }
 
 Evaluator::btSettings* Evaluator::find_best_BT(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam,
-                             uint64_t (*acc)(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count)) {
+                             outType& (*acc)(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count)) {
     clock_t start = clock();
     btSettings* minSettings = new btSettings;
-    *minSettings = {0, 0, 0, UINT64_MAX};
+    *minSettings = {0, 0, 0, new outType};
+    minSettings->out->gates = UINT64_MAX;
     uint16_t d = myLog2(m);
 
     for(uint16_t B = bParam.min; B <= bParam.max; B = B*bParam.step_m + bParam.step_p) {
         for(uint16_t c = 2; c <= d; c *= 2) {
             for(uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
-                uint64_t out = noAcc * acc(m, b, B, c, count);
-                if(out < minSettings->out)
-                    *minSettings = {B, c, count, out};
+                /*outType& accOut = */
+                outType& out = noAcc*acc(m, b, B, c, count);
+                if(out < *minSettings->out) {
+                    delete &(minSettings->out);
+                    *minSettings = {B, c, count, &out};
+                }
+                else delete &out;
             }
         }
     }
     float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << type << ": B: " << minSettings->B << " c: " << minSettings->c << " count: " << minSettings->count << " out: " << minSettings->out << " time needed: " << elapsed << std::endl;
+    std::cout << type << ": B: " << minSettings->B << " c: " << minSettings->c << " count: " << minSettings->count << " out: " << *(minSettings->out) << " time needed: " << elapsed << std::endl;
     return minSettings;
 }
 
-uint64_t acc_BT_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
+outType& acc_BT_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
     BinaryTree* oram = TreeFactory::create_BT(m, b, B, c, count);
-    uint64_t out = oram->c_acc(b).gates;
+    outType& out = oram->c_acc(b);
     delete oram;
     return out;
 }
 
-uint64_t acc_BT_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
-    return c_acc_BT(m, b, B, count, c).gates;
+outType& acc_BT_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
+    return c_acc_BT(m, b, B, count, c);
 }
 
 Evaluator::pathSettings* Evaluator::find_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
-                               uint64_t (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t stash, uint16_t count)) {
+                               outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t stash, uint16_t count)) {
     clock_t start = clock();
     btSettings* minBTSettings = new btSettings;
     pathSettings* minSettings = new pathSettings;
-    minSettings->bt->out = UINT64_MAX;
+    minSettings->bt->out = new outType;
+    minSettings->bt->out->gates = UINT64_MAX;
     uint16_t d = myLog2(m);
 
     for(uint16_t stash = sParam.min; stash <= sParam.max; stash = stash*sParam.step_m + sParam.step_p) {
         for(uint16_t B = bParam.min; B <= bParam.max; B = B*bParam.step_m + bParam.step_p) {
             for (uint16_t c = 2; c <= d; c *= 2) {
                 for (uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
-                    uint64_t access = acc(m, b, B, c, stash, count);
-                    uint64_t out = noAcc * access;
+                    outType& out = noAcc*acc(m, b, B, c, stash, count);
 
-                    if (out < minSettings->bt->out && myLog2(noAcc) + myLog2(access) < 64) {
-                        *minBTSettings = {B, c, count, out};
+                    if (out < *minSettings->bt->out /*&& myLog2(noAcc) + myLog2(access) < 64*/) {
+                        delete &(minSettings->bt->out);
+                        *minBTSettings = {B, c, count, &out};
                         *minSettings = {minBTSettings, stash};
                     }
+                    else delete &out;
                 }
             }
         }
     }
     float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << type << ": B: " << minSettings->bt->B << " c: " << minSettings->bt->c << " count: " << minSettings->bt->count << " stash: " << minSettings->stash << " out: " << minSettings->bt->out << " time needed: " << elapsed << std::endl;
+    std::cout << type << ": B: " << minSettings->bt->B << " c: " << minSettings->bt->c << " count: " << minSettings->bt->count << " stash: " << minSettings->stash << " out: " << *(minSettings->bt->out) << " time needed: " << elapsed << std::endl;
     return minSettings;
 }
 
-uint64_t acc_Path_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+outType& acc_Path_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Path* path = TreeFactory::create_Path("Path", m, b, B, c, stash, count);
-    uint64_t out = path->c_acc(b).gates;
+    outType& out = path->c_acc(b);
     delete path;
     return out;
 }
 
-uint64_t acc_Path_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_Path(m, b, B, count, stash, c).gates;
+outType& acc_Path_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+    return c_acc_Path(m, b, B, count, stash, c);
 }
 
-uint64_t acc_PathSC_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+outType& acc_PathSC_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     PathSC* path = (PathSC*) TreeFactory::create_Path("PathSC", m, b, B, c, stash, count);
-    uint64_t out = path->c_acc(b).gates;
+    outType& out = path->c_acc(b);
     delete path;
     return out;
 }
 
-uint64_t acc_PathSC_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_PSC(m, b, B, count, stash, c).gates;
+outType& acc_PathSC_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+    return c_acc_PSC(m, b, B, count, stash, c);
 }
 
-uint64_t acc_SCORAM_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+outType& acc_SCORAM_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Scoram* path = (Scoram*) TreeFactory::create_Path("Scoram", m, b, B, c, stash, count);
-    uint64_t out = path->c_acc(b).gates;
+    outType& out = path->c_acc(b);
     delete path;
     return out;
 }
 
-uint64_t acc_SCORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_SCORAM(m, b, B, count, stash, c).gates;
+outType& acc_SCORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+    return c_acc_SCORAM(m, b, B, count, stash, c);
 }
 
-uint64_t acc_CORAM_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+outType& acc_CORAM_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Coram* path = (Coram*) TreeFactory::create_Path("CORAM", m, b, B, c, stash, count);
-    uint64_t out = path->c_acc(b).gates;
+    outType& out = path->c_acc(b);
     delete path;
     return out;
 }
 
-uint64_t acc_CORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_CORAM(m, b, B, count, stash, c).gates;
+outType& acc_CORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+    return c_acc_CORAM(m, b, B, count, stash, c);
 }
 
 void Evaluator::evaluate_exact(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
