@@ -16,7 +16,7 @@ public:
      * @param b: number of bits per array element
      * @return costs for read access
      */
-    static inline uint64_t read(uint64_t m, uint64_t b) {
+    static inline outType& read(uint64_t m, uint64_t b) {
         // tMux(m, b)
         return c_mux(m, b);
     }
@@ -27,7 +27,7 @@ public:
      * @param b: number of bits per array element
      * @return costs for write access
      */
-    static inline uint64_t write(uint64_t m, uint64_t b) {
+    static inline outType& write(uint64_t m, uint64_t b) {
         // m*mux(b)+decode(m)+???Reencryption   // TODO
         return ((uint64_t) m*c_mux(b))+c_decode(myLog2(m));
     }

@@ -31,8 +31,8 @@ public:
     };
 
 private:
-    uint64_t find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
-    uint64_t find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b);
+    outType& find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
+    outType& find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b);
 
     Evaluator::btSettings* find_best_BT(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam,
             uint64_t (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t count));

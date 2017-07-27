@@ -17,11 +17,11 @@ protected:
 public:
     ORAM(uint64_t m, uint64_t b, uint64_t bb, std::string type) : m(m), b(b), bb(bb), type(type){}
     virtual ~ORAM() {}
-    virtual uint64_t c_init(bool values) = 0;
-    virtual uint64_t c_acc(uint64_t b) = 0;
-    virtual uint64_t c_add() = 0;
-    virtual uint64_t c_RAR(uint64_t b) = 0;
-    virtual uint64_t c_amortized(uint16_t noAcc, bool values) = 0;
+    virtual outType& c_init(bool values) = 0;
+    virtual outType& c_acc(uint64_t b) = 0;
+    virtual outType& c_add() = 0;
+    virtual outType& c_RAR(uint64_t b) = 0;
+    virtual outType& c_amortized(uint16_t noAcc, bool values) = 0;
 };
 
 #endif //ORAMEVALUATOR_ORAM_H

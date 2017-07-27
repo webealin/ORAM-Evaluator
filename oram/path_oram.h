@@ -26,11 +26,11 @@ public:
     void build();
     virtual Path* createMap(uint64_t newM);
     LinearScanOram* createBuckets();
-    uint64_t c_LCA(uint64_t b);
-    uint64_t c_RAR(uint64_t b);
-    uint64_t c_acc(uint64_t b);
-    uint64_t c_init(bool values);
-    virtual uint64_t c_addAndEvict();
+    outType& c_LCA(uint64_t b);
+    outType& c_RAR(uint64_t b);
+    outType& c_acc(uint64_t b);
+    outType& c_init(bool values);
+    virtual outType& c_addAndEvict();
 };
 
 class PathSC : public Path {
@@ -41,11 +41,11 @@ public:
     }
     ~PathSC() { }
     PathSC* createMap(uint64_t newM);
-    uint64_t c_addAndEvict();
-    uint64_t c_dud(uint64_t m, uint64_t b);
-    uint64_t c_offset(uint64_t m, uint64_t b);
-    uint64_t sort1();
-    uint64_t sort23();
+    outType& c_addAndEvict();
+    outType& c_dud(uint64_t m, uint64_t b);
+    outType& c_offset(uint64_t m, uint64_t b);
+    outType& sort1();
+    outType& sort23();
 };
 
 class Scoram : public Path {
@@ -53,11 +53,11 @@ public:
     Scoram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "SCORAM") {}
     ~Scoram() { }
     Scoram* createMap(uint64_t newM);
-    uint64_t c_addAndEvict();
-    uint64_t c_cPut();
-    uint64_t c_minLCA(uint64_t m, uint64_t b);
-    uint64_t c_RDP();
-    uint64_t c_GPP();
+    outType& c_addAndEvict();
+    outType& c_cPut();
+    outType& c_minLCA(uint64_t m, uint64_t b);
+    outType& c_RDP();
+    outType& c_GPP();
 };
 
 class Coram : public Path {
@@ -65,14 +65,14 @@ public:
     Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "Circuit ORAM") {}
     ~Coram() { }
     Coram* createMap(uint64_t newM);
-    uint64_t c_minLCA(uint64_t m, uint64_t b);
-    uint64_t c_PDStash();
-    uint64_t c_PDStage();
-    uint64_t c_PD();
-    uint64_t c_PT();
-    uint64_t c_evictOnceW();
-    uint64_t c_evictOnce();
-    uint64_t c_addAndEvict();
+    outType& c_minLCA(uint64_t m, uint64_t b);
+    outType& c_PDStash();
+    outType& c_PDStage();
+    outType& c_PD();
+    outType& c_PT();
+    outType& c_evictOnceW();
+    outType& c_evictOnce();
+    outType& c_addAndEvict();
 };
 
 #endif //ORAMEVALUATOR_PATH_ORAM_H

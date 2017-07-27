@@ -40,7 +40,7 @@ void TreeInterface::build(uint16_t counter) {
  * @param values: true if the values are in place during initialization
  * @return costs for initialization of tree-based ORAM
  */
-uint64_t TreeInterface::c_init(bool values) {
+outType& TreeInterface::c_init(bool values) {
     // (2^(d+1)-1)*initBO(B, b)+m*rand(d)+initMap(m/c, b)+m*accBT(m, b)
     return ((uint64_t) pow(2, d+1)-1)*buckets->c_init(values)+m*c_rand(d)+map->c_init(true)+m*c_add();
 }
@@ -49,7 +49,7 @@ uint64_t TreeInterface::c_init(bool values) {
  * eviction phase of tree-based ORAMs
  * @return costs for eviction phase
  */
-uint64_t TreeInterface::c_evict() {
+outType& TreeInterface::c_evict() {
     // sum(2 to d-1: 2*rand(i))+(2*d-3)(pop_BO(B, bb)+dChild(bb)+2*add_BO(B, bb))
     return (2*d-3)*(buckets->c_pop()+c_condSwap(bb)+2*buckets->c_add());        // TODO summe
 }
@@ -58,7 +58,7 @@ uint64_t TreeInterface::c_evict() {
  * lookup and map update for tree-based ORAM
  * @return costs for lookup and map update
  */
-uint64_t TreeInterface::c_LUMU() {
+outType& TreeInterface::c_LUMU() {
     //dIdx(myLog2(m))+dBIdx+Read_LS(c, log(m))+Write_LS(c, log(m))+acc_Map(m/c, b)
     return LinearScan::read(c, d) + LinearScan::write(c, d) + map->c_acc(c*d);
 }
@@ -67,7 +67,7 @@ uint64_t TreeInterface::c_LUMU() {
  * lookup and map update for GKK binary-tree ORAM
  * @return costs for lookup and map update
  */
-uint64_t BinaryTreeGKK::c_LUMU() {
+outType& BinaryTreeGKK::c_LUMU() {
     //dIdx(myLog2(m))+dBIdx+Read_LS(c, log(m))+Write_LS(c, log(m))+acc_Map(m/c, b)
     return LinearScan::read(c, d) + LinearScan::write(c, d) + map->c_acc(b);
 }
@@ -77,7 +77,7 @@ uint64_t BinaryTreeGKK::c_LUMU() {
  * @param b: number of bit to read during RAR (always includes payload and isDummy)
  * @return costs for RAR using b-bit
  */
-uint64_t TreeInterface::c_RAR(uint64_t b) {
+outType& TreeInterface::c_RAR(uint64_t b) {
     //LUMU(m, b)+rand(d)+dPath+d*RAR_BO(B, b+1, d)
     return c_LUMU()+c_rand(d)+d*buckets->c_RAR(b+1);
 }
@@ -87,7 +87,7 @@ uint64_t TreeInterface::c_RAR(uint64_t b) {
  * @param b: number of bit to read during RAR, only payload here
  * @return costs for RAR using b-bit
  */
-uint64_t BinaryTreeGKK::c_RAR(uint64_t b) {
+outType& BinaryTreeGKK::c_RAR(uint64_t b) {
     //LUMU(m, b)+rand(d)+dPath+d*RAR_BO(B, b+d, d)
     return c_LUMU()+c_rand(d)+d*buckets->c_RAR(b+d);
 }
@@ -96,7 +96,7 @@ uint64_t BinaryTreeGKK::c_RAR(uint64_t b) {
  * Add: writes whole bb bit element to the first empty slot
  * @return costs for adding one element
  */
-uint64_t TreeInterface::c_add() {
+outType& TreeInterface::c_add() {
     //add_BO(B, bb)+evict(m, b)
     return buckets->c_add()+c_evict();
 }
@@ -106,7 +106,7 @@ uint64_t TreeInterface::c_add() {
  * @param b: number of bit to read, only payload here
  * @return costs for accessing b-bit
  */
-uint64_t TreeInterface::c_acc(uint64_t b) {
+outType& TreeInterface::c_acc(uint64_t b) {
     //RAR(m, b)+add(m, b)
     return c_RAR(b)+c_add();
 }
@@ -117,7 +117,7 @@ uint64_t TreeInterface::c_acc(uint64_t b) {
  * @param values: true if the values are in place during initialization
  * @return amortized costs per access
  */
-uint64_t TreeInterface::c_amortized(uint16_t noAcc, bool values) {
+outType& TreeInterface::c_amortized(uint16_t noAcc, bool values) {
     // init(m, b) / a + acc(m, b)
     return c_init(values)/noAcc + c_acc(b);
 }

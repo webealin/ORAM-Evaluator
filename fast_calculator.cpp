@@ -9,19 +9,19 @@
 #include "helper.h"
 #include "primitives.h"
 
-outType* c_acc_LS(uint64_t m, uint64_t b, bool write) {
+outType& c_acc_LS(uint64_t m, uint64_t b, bool write) {
     outType* outT = new outType;
     *outT = {write? m*(b+2) : b*(m-1), 0, 0};
-    return outT;
+    return *outT;
 }
 
-outType* c_LS(uint64_t m, uint64_t b, uint16_t noRead, uint16_t noWrite) {
+outType& c_LS(uint64_t m, uint64_t b, uint16_t noRead, uint16_t noWrite) {
     outType* outT = new outType;
     *outT = {noRead*b*(m-1) + noWrite*m*(b+2), 0, 0};
-    return outT;
+    return *outT;
 }
 
-outType* c_acc_BT(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t c) {
+outType& c_acc_BT(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t c) {
     outType* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
@@ -35,7 +35,7 @@ outType* c_acc_BT(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t 
         newB = c*d;
     }
     *outT = {out + newM * (c*d + myLog2(newM) - 1), 0, 0};
-    return outT;
+    return *outT;
     // return d*c_RAR_LSO(B, b+1, d) +  d*(c-1) + c*(d+2) + lumu +(2*d-3)*(c_Pop_LSO(B, b+2*d+1, d)+b+2*d+1)+(4*d-5)*c_Add_LSO(B, b+2*d+1, d);
 }
 
@@ -46,7 +46,7 @@ void test_BT_formulas() {
 }
 
 //       PATH          //
-outType* c_acc_Path(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
+outType& c_acc_Path(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
     outType* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
@@ -61,7 +61,7 @@ outType* c_acc_Path(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_
         newB = c*d;
     }
     *outT = {out + newM * (c*d + myLog2(newM) - 1), 0, 0};
-    return outT;
+    return *outT;
 }
 
 void test_path_formulas() {
@@ -71,7 +71,7 @@ void test_path_formulas() {
 }
 
 //       PATH-SC          //
-outType* c_acc_PSC(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
+outType& c_acc_PSC(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
     outType* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
@@ -82,13 +82,13 @@ outType* c_acc_PSC(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t
         d = (uint16_t) (myLog2(newM)-1);
         uint64_t lca = (uint64_t)(floor((double) d/2))* myLog2(d)+d-1;  // TODO
         uint16_t logBD = myLog2(B*d);
-        out += B*d*(2*logBD+newB+d+2)+2*c*d-d+2*c + c_sort(B*d+s, newB+2*d+2, myLog2(d)) +
-               (B*d+s)*(lca+6*logBD-3)-2*logBD+1 + 2*c_sort((uint64_t) 2*B*d+s, newB+2*d+2, logBD);
+        out += B*d*(2*logBD+newB+d+2)+2*c*d-d+2*c + c_sort(B*d+s, newB+2*d+2, myLog2(d)).gates +
+               (B*d+s)*(lca+6*logBD-3)-2*logBD+1 + 2*c_sort((uint64_t) 2*B*d+s, newB+2*d+2, logBD).gates;
         newM = (uint64_t) ceil((double) newM/c);
         newB = c*d;
     }
     *outT = {out + newM * (c*d + myLog2(newM) - 1), 0, 0};
-    return outT;
+    return *outT;
 }
 
 void test_pathSC_formulas() {
@@ -99,7 +99,7 @@ void test_pathSC_formulas() {
 
 
 //       SCORAM          //
-outType* c_acc_SCORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
+outType& c_acc_SCORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
     outType* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
@@ -113,7 +113,7 @@ outType* c_acc_SCORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint1
         newB = c*d;
     }
     *outT = {out + newM * (c*d + myLog2(newM) - 1), 0, 0};
-    return outT;
+    return *outT;
 }
 
 void test_SCORAM_formulas() {
@@ -123,7 +123,7 @@ void test_SCORAM_formulas() {
 }
 
 //       Circuit ORAM          //
-outType* c_acc_CORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
+outType& c_acc_CORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
     outType* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
@@ -142,7 +142,7 @@ outType* c_acc_CORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16
     //return d*c_RAR_LSO(B, b+1, d+1)+d*(c-1)+c*(d+2)+lumu+2*(-1+s*(2*(d+myLog2(d)*(d+myLog2(d)))+2)+ 2*myLog2(d)+
     //        d*(18*myLog2(d)+2*b+4*d+2+c_Add_LSO(B, b+2*d+2, d+1)+c_RAR_LSO(B, b+d+1, d+1)+B*(2*(d+myLog2(d)*(d+myLog2(d)))+2)));
     *outT = {out + newM * (c*d + myLog2(newM) - 1), 0, 0};
-    return outT;
+    return *outT;
 }
 
 void test_CORAM_formulas() {

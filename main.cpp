@@ -109,12 +109,12 @@ void test_paper_benchmarks() {
 
 void evaluate() {
     Evaluator* eval = new Evaluator();
-    //eval->evaluate_exact(1, 0, (uint64_t) pow(2, 30), 32);
-    //eval->evaluate_exact_fast(1, 0, (uint64_t) pow(2, 30), 32);
+    eval->evaluate_exact(1, 0, (uint64_t) pow(2, 30), 32);
+    eval->evaluate_exact_fast(1, 0, (uint64_t) pow(2, 30), 32);
     //eval->evaluate_exact(10, 10, (uint64_t) pow(2, 30), 32);
     //eval->evaluate_exact(10, 10, (uint64_t) pow(2, 30), 512);
-    eval->evaluate_exact(10, 10, (uint64_t) pow(2, 60), 512);
-    eval->evaluate_exact_fast(10, 10, (uint64_t) pow(2, 60), 512);
+    //eval->evaluate_exact(10, 10, (uint64_t) pow(2, 60), 512);
+    //eval->evaluate_exact_fast(10, 10, (uint64_t) pow(2, 60), 512);
     delete eval;
 }
 

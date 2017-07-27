@@ -15,6 +15,44 @@ struct outType {
     uint64_t rounds;
 };
 
+inline outType& operator+ (const outType& a, const outType& b) {
+    outType* out = new outType;
+    *out = {a.gates + b.gates, a.traffic + b.traffic, a.rounds + b.rounds};
+    delete &a;
+    delete &b;
+
+    return *out;
+}
+
+inline outType& operator- (const outType& a, const outType& b) {
+    outType* out = new outType;
+    *out = {a.gates - b.gates, a.traffic - b.traffic, a.rounds - b.rounds};
+    delete &a;
+    delete &b;
+
+    return *out;
+}
+
+inline outType& operator* (const uint64_t m, const outType& b) {
+    outType* out = new outType;
+    *out = {m*b.gates, m*b.traffic, m*b.rounds};
+    delete &b;
+
+    return *out;
+}
+
+inline outType& operator/ (const outType& b, const uint64_t d) {
+    outType* out = new outType;
+    *out = {b.gates/d, b.traffic/d, b.rounds/d};
+    delete &b;
+
+    return *out;
+}
+
+inline std::ostream& operator<<(std::ostream& ostr, const outType& i) {
+    return ostr << "gates: " << i.gates << " traffic: " << i.traffic << " rounds: " << i.rounds;
+}
+
 inline uint16_t myLog2(uint64_t x) {
     return (uint16_t) ceil(log(x) / log(2.0));
 }

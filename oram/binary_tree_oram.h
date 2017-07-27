@@ -37,13 +37,13 @@ public:
         return new LinearScanOram(newM, c*d, myLog2(newM), false);
     }
 
-    uint64_t c_evict();
-    uint64_t c_add();
-    virtual uint64_t c_init(bool values);
-    virtual uint64_t c_LUMU();
-    virtual uint64_t c_RAR(uint64_t b);
-    virtual uint64_t c_acc(uint64_t b);
-    uint64_t c_amortized(uint16_t noAcc, bool values);
+    outType& c_evict();
+    outType& c_add();
+    virtual outType& c_init(bool values);
+    virtual outType& c_LUMU();
+    virtual outType& c_RAR(uint64_t b);
+    virtual outType& c_acc(uint64_t b);
+    outType& c_amortized(uint16_t noAcc, bool values);
 };
 
 /**
@@ -74,8 +74,8 @@ public:
     BinaryTreeGKK(uint64_t m, uint64_t b, uint16_t c) :
             TreeInterface(m, b, myLog2(m), b+2*myLog2(m), (uint16_t) 2*myLog2(m), c, "GKK Binary Tree ORAM") {}
     ~BinaryTreeGKK() { }
-    uint64_t c_RAR(uint64_t b);
-    uint64_t c_LUMU();
+    outType& c_RAR(uint64_t b);
+    outType& c_LUMU();
 
     inline BinaryTreeGKK* createMap(uint64_t newM) {
         return new BinaryTreeGKK(newM, b, c);

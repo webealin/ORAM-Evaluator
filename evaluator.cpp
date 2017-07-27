@@ -5,15 +5,15 @@
 #include "evaluator.h"
 #include "fast_calculator.h"
 
-uint64_t Evaluator::find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
-    uint64_t out = noRead * LinearScan::read(m, b) + noWrite * LinearScan::write(m, b);
+outType& Evaluator::find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
+    outType out = noRead * LinearScan::read(m, b) + noWrite * LinearScan::write(m, b);
     std::cout << "Linear Scan: " << out << std::endl;
     return out;
 }
 
-uint64_t Evaluator::find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b) {
+outType& Evaluator::find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b) {
     LinearScanOram* oram = (new LinearScanOram(m, b));
-    uint64_t out = noAcc*(uint64_t) oram->c_acc(b);
+    outType& out = noAcc*oram->c_acc(b);
     std::cout << "Linear Scan ORAM: " << out << std::endl;
     delete oram;
     return out;
@@ -42,13 +42,13 @@ Evaluator::btSettings* Evaluator::find_best_BT(uint32_t noAcc, uint64_t m, uint6
 
 uint64_t acc_BT_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
     BinaryTree* oram = TreeFactory::create_BT(m, b, B, c, count);
-    uint64_t out = oram->c_acc(b);
+    uint64_t out = oram->c_acc(b).gates;
     delete oram;
     return out;
 }
 
 uint64_t acc_BT_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
-    return c_acc_BT(m, b, B, count, c)->gates;
+    return c_acc_BT(m, b, B, count, c).gates;
 }
 
 Evaluator::pathSettings* Evaluator::find_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
@@ -81,46 +81,46 @@ Evaluator::pathSettings* Evaluator::find_best_Path(uint32_t noAcc, uint64_t m, u
 
 uint64_t acc_Path_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Path* path = TreeFactory::create_Path("Path", m, b, B, c, stash, count);
-    uint64_t out = path->c_acc(b);
+    uint64_t out = path->c_acc(b).gates;
     delete path;
     return out;
 }
 
 uint64_t acc_Path_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_Path(m, b, B, count, stash, c)->gates;
+    return c_acc_Path(m, b, B, count, stash, c).gates;
 }
 
 uint64_t acc_PathSC_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     PathSC* path = (PathSC*) TreeFactory::create_Path("PathSC", m, b, B, c, stash, count);
-    uint64_t out = path->c_acc(b);
+    uint64_t out = path->c_acc(b).gates;
     delete path;
     return out;
 }
 
 uint64_t acc_PathSC_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_PSC(m, b, B, count, stash, c)->gates;
+    return c_acc_PSC(m, b, B, count, stash, c).gates;
 }
 
 uint64_t acc_SCORAM_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Scoram* path = (Scoram*) TreeFactory::create_Path("Scoram", m, b, B, c, stash, count);
-    uint64_t out = path->c_acc(b);
+    uint64_t out = path->c_acc(b).gates;
     delete path;
     return out;
 }
 
 uint64_t acc_SCORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_SCORAM(m, b, B, count, stash, c)->gates;
+    return c_acc_SCORAM(m, b, B, count, stash, c).gates;
 }
 
 uint64_t acc_CORAM_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Coram* path = (Coram*) TreeFactory::create_Path("CORAM", m, b, B, c, stash, count);
-    uint64_t out = path->c_acc(b);
+    uint64_t out = path->c_acc(b).gates;
     delete path;
     return out;
 }
 
 uint64_t acc_CORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_CORAM(m, b, B, count, stash, c)->gates;
+    return c_acc_CORAM(m, b, B, count, stash, c).gates;
 }
 
 void Evaluator::evaluate_exact(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {

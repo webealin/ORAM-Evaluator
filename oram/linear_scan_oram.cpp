@@ -8,7 +8,7 @@
  * @param values: true if the values are in place during initialization
  * @return costs for initialization of LSO
  */
-uint64_t LinearScanOram::c_init(bool values) {
+outType& LinearScanOram::c_init(bool values) {
     // init sShare(m, b)
     return c_sShare(m, bb, values);
 }
@@ -18,7 +18,7 @@ uint64_t LinearScanOram::c_init(bool values) {
  * @param b: number of bit to read, excluding the virtual index (b2)
  * @return costs for accessing b-bit
  */
-uint64_t LinearScanOram::c_acc(uint64_t b) {
+outType& LinearScanOram::c_acc(uint64_t b) {
     // B2Y(m, b+b2) + m(mux(b)+compEq(b2))+Y2B(m, b+b2)
     return c_B2Y(m, b+b2) + ((uint64_t) m*(c_mux(b)+c_comp_eq(b2))) + c_Y2B(m, b+b2);   // TODO: brauch ich das noch?
 }
@@ -28,13 +28,13 @@ uint64_t LinearScanOram::c_acc(uint64_t b) {
  * @param b: number of bit to read during RAR (always includes payload and isDummy)
  * @return costs for RAR using b-bit
  */
-uint64_t LinearScanOram::c_RAR(uint64_t b) {
+outType& LinearScanOram::c_RAR(uint64_t b) {
     if(useOldFormula)
         // B2Y(m, b+b2) + m*(2*compEq(b2)+AND+OR+mux(b)) + Y2B(m, b+b2)
-        return c_B2Y(m, b + b2) + m * (2 * c_comp_eq(b2) + 2 + c_mux(b)) + c_Y2B(m, b + b2);
+        return c_B2Y(m, b + b2) + m * (2*c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b)) + c_Y2B(m, b + b2);
 
     // B2Y(m, b+b2) + m*(compEq(b2)+AND+OR+mux(b)) + Y2B(m, b+b2)
-    return c_B2Y(m, b+b2)+m*(c_comp_eq(b2)+2+c_mux(b))+c_Y2B(m, b+b2);
+    return c_B2Y(m, b+b2)+m*(c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b))+c_Y2B(m, b+b2);
 }
 
 /**
@@ -43,7 +43,7 @@ uint64_t LinearScanOram::c_RAR(uint64_t b) {
  * @param cond: pointer to costs for condition to use
  * @return costs for conditional RAR using b-bit and condition cond
  */
-uint64_t LinearScanOram::c_cRAR(uint64_t b, uint64_t (*cond)()) {
+outType& LinearScanOram::c_cRAR(uint64_t b, outType& (*cond)()) {
     return c_RAR(b)+m*cond();
 }
 
@@ -51,12 +51,12 @@ uint64_t LinearScanOram::c_cRAR(uint64_t b, uint64_t (*cond)()) {
  * Add: writes whole bb bit element to the first empty slot
  * @return costs for adding one element
  */
-uint64_t LinearScanOram::c_add() {
+outType& LinearScanOram::c_add() {
     if(useOldFormula)
         // B2Y(m, bb) + (m-1)(AND+OR)+m*(compEq(b2)+mux(bb)) + Y2B(m, bb)
-        return c_B2Y(m, bb)+(m-1)*2+m*(c_comp_eq(b2)+c_mux(bb))+c_Y2B(m, bb);
+        return c_B2Y(m, bb) + (m-1)*2*c_lin_gate() + m*(c_comp_eq(b2) + c_mux(bb)) + c_Y2B(m, bb);
     // B2Y(m, bb) + (m-1)(AND+OR)+m*mux(bb) + Y2B(m, bb)
-    return c_B2Y(m, bb)+(m-1)*2+m*c_mux(bb)+c_Y2B(m, bb);
+    return c_B2Y(m, bb) + (m-1)*2*c_lin_gate() + m*c_mux(bb) + c_Y2B(m, bb);
 }
 
 /**
@@ -64,7 +64,7 @@ uint64_t LinearScanOram::c_add() {
  * @param cond: pointer to costs for condition to use
  * @return costs for conditionally adding one element
  */
-uint64_t LinearScanOram::c_cAdd(uint64_t (*cond)()) {
+outType& LinearScanOram::c_cAdd(outType& (*cond)()) {
     return c_add()+cond();
 }
 
@@ -72,12 +72,12 @@ uint64_t LinearScanOram::c_cAdd(uint64_t (*cond)()) {
  * Pop: removes first non-dummy element
  * @return costs for pop of one element
  */
-uint64_t LinearScanOram::c_pop() {
+outType& LinearScanOram::c_pop() {
     if(useOldFormula)
         // B2Y(m, bb) + (m-1)(2*OR+AND)+m*(compEq(b2)+mux(bb)) + Y2B(m, bb)
-        return c_B2Y(m, bb)+(m-1)*3+m*(c_comp_eq(b2)+c_mux(bb))+c_Y2B(m, bb);
+        return c_B2Y(m, bb) + (m-1)*3*c_lin_gate() + m*(c_comp_eq(b2) + c_mux(bb)) + c_Y2B(m, bb);
     // B2Y(m, bb) + (m-1)(2*OR+AND)+m*mux(bb) + Y2B(m, bb)
-    return c_B2Y(m, bb)+(m-1)*3+m*c_mux(bb)+c_Y2B(m, bb);
+    return c_B2Y(m, bb) + (m-1)*3*c_lin_gate() + m*(c_mux(bb) + c_Y2B(m, bb));
 }
 
 /**
@@ -85,7 +85,7 @@ uint64_t LinearScanOram::c_pop() {
  * @param cond: pointer to costs for condition to use
  * @return costs for conditional pop of one element
  */
-uint64_t LinearScanOram::c_cPop(uint64_t (*cond)()) {
+outType& LinearScanOram::c_cPop(outType& (*cond)()) {
     return c_pop()+cond();
 }
 
@@ -95,6 +95,6 @@ uint64_t LinearScanOram::c_cPop(uint64_t (*cond)()) {
  * @param values: true if the values are in place during initialization
  * @return amortized costs per access
  */
-uint64_t LinearScanOram::c_amortized(uint16_t noAcc, bool values) {
+outType& LinearScanOram::c_amortized(uint16_t noAcc, bool values) {
     return (c_init(values) / noAcc) + c_acc(b);
 }
