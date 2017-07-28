@@ -3,7 +3,7 @@
 #include "oram/tree_factory.h"
 #include "linear_scan.h"
 #include "time.h"
-#include "evaluator.h"
+#include "evaluation/evaluator.h"
 Settings::ToCalc Settings::toCalc = Settings::GATES;
 
 void test_GKK() {

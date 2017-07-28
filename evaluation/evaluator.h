@@ -5,9 +5,9 @@
 #ifndef ORAMEVALUATOR_EVALUATOR_H
 #define ORAMEVALUATOR_EVALUATOR_H
 
-#include "oram/tree_factory.h"
+#include "../oram/tree_factory.h"
 #include "time.h"
-#include "linear_scan.h"
+#include "../linear_scan.h"
 
 class Evaluator {
 public:

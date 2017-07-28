@@ -3,7 +3,7 @@
 //
 
 #include "evaluator.h"
-#include "fast_calculator.h"
+#include "../fast_calculator.h"
 
 outType& Evaluator::find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
     outType& out = noRead * LinearScan::read(m, b) + noWrite * LinearScan::write(m, b);
