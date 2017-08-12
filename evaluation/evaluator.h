@@ -7,7 +7,7 @@
 
 #include "../oram/tree_factory.h"
 #include "time.h"
-#include "../linear_scan.h"
+#include "../trivial_linear_scan.h"
 
 class Evaluator {
 public:
@@ -16,11 +16,17 @@ public:
         uint16_t c;
         uint16_t count;
         outType* out;
+        inline ~btSettings() {
+            delete out;
+        }
     };
 
     struct pathSettings {
-        btSettings* bt;
         uint16_t stash;
+        btSettings* bt;
+        inline ~pathSettings() {
+            delete bt;
+        }
     };
 
     struct evalParam {
@@ -37,7 +43,7 @@ private:
     Evaluator::btSettings* find_best_BT(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam,
             outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t count));
 
-    Evaluator::pathSettings* find_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
+    Evaluator::pathSettings find_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
                                    outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t stash, uint16_t count));
 public:
     void evaluate_exact(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);

@@ -20,7 +20,7 @@ outType& LinearScanOram::c_init(bool values) {
  */
 outType& LinearScanOram::c_acc(uint64_t b) {
     // B2Y(m, b+b2) + m(mux(b)+compEq(b2))+Y2B(m, b+b2)
-    return c_B2Y(m, b+b2) + ((uint64_t) m*(c_mux(b)+c_comp_eq(b2))) + c_Y2B(m, b+b2);   // TODO: brauch ich das noch?
+    return c_B2Y(m, b+b2) + ((uint64_t) m*(c_mux(b)+c_comp_eq(b2))) + c_Y2B(m, b+b2);
 }
 
 /**
@@ -97,4 +97,39 @@ outType& LinearScanOram::c_cPop(outType& (*cond)()) {
  */
 outType& LinearScanOram::c_amortized(uint16_t noAcc, bool values) {
     return (c_init(values) / noAcc) + c_acc(b);
+}
+
+/**
+ * reads b-bit from one of the elements in the array
+ * @param b: number of bit to read, excluding the virtual index (b2)
+ * @return costs for accessing b-bit
+ */
+outType& LinearScan::c_acc(uint64_t b) {
+    // m(mux(b)+compEq(b2))
+    outType& out = ((uint64_t) m*(c_mux(b)+c_comp_eq(b2)));
+    return out;
+}
+
+outType& LinearScan::c_init(bool values) {
+    std::cout << "error: this function should not be invoked" << std::endl;
+    auto* out = new outType;     // TODO
+    *out = {0, 0, 0};
+}
+
+outType& LinearScan::c_amortized(uint16_t noAcc, bool values) {
+    std::cout << "error: this function should not be invoked" << std::endl;
+    auto* out = new outType;     // TODO
+    *out = {0, 0, 0};
+}
+
+outType& LinearScan::c_RAR(uint64_t b) {
+    std::cout << "error: this function should not be invoked" << std::endl;
+    auto* out = new outType;     // TODO
+    *out = {0, 0, 0};
+}
+
+outType& LinearScan::c_add() {
+    std::cout << "error: this function should not be invoked" << std::endl;
+    auto* out = new outType;     // TODO
+    *out = {0, 0, 0};
 }

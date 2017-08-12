@@ -8,7 +8,7 @@
 #include "primitives.h"
 #include "helper.h"
 
-class LinearScan {
+class TrivialLinearScan {
 public:
     /**
      * costs of read access on standard Linear Scan

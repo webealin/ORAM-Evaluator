@@ -12,7 +12,7 @@
  * @return costs (gates, traffic, rounds) for one gate
  */
 outType& c_lin_gate() {
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {1, 32, 0};
     return *out;
 }
@@ -24,7 +24,7 @@ outType& c_lin_gate() {
  * @return costs (gates, traffic, rounds) for Y2B share conversion
  */
 outType& c_Y2B(uint64_t m, uint64_t b) {
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {0, 0, 0};
     return *out;
 }
@@ -36,8 +36,8 @@ outType& c_Y2B(uint64_t m, uint64_t b) {
  * @return
  */
 outType& c_B2Y(uint64_t m, uint64_t b) {
-    outType* out = new outType;
-    *out = {0, m*32*b, 3};            // TODO: sicher?
+    auto* out = new outType;
+    *out = {0, m*32*b, 2};            // TODO: sicher?
     return *out;
 }
 
@@ -49,7 +49,7 @@ outType& c_B2Y(uint64_t m, uint64_t b) {
  * @return costs /gates, traffic, rounds) for establishing a Boolean share
  */
 outType& c_sShare(uint64_t m, uint64_t b, bool values) {
-    outType* out = new outType;
+    auto* out = new outType;
     if(values)
         *out = c_Y2B(m, b);
     else *out = {0, m*b, 1};          // TODO: sicher?
@@ -62,7 +62,7 @@ outType& c_sShare(uint64_t m, uint64_t b, bool values) {
  * @return costs (gates, traffic, rounds) for the multiplexer
  */
 outType& c_mux(uint64_t b) {
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {b, 32*b, 0};
     return *out;
 }
@@ -95,7 +95,7 @@ outType& c_mux_chain(uint64_t m, uint64_t b) {
  * @return costs (gates, traffic, rounds) of addition
  */
 outType& c_adder(uint64_t b) {
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {(b-1), 32*(b-1), 0};
     return *out;
 }
@@ -106,7 +106,7 @@ outType& c_adder(uint64_t b) {
  * @return costs (gates, traffic, rounds) of addition
  */
 outType& c_adder_carry(uint64_t b) {
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {b, 32*b, 0};
     return *out;
 }
@@ -118,7 +118,7 @@ outType& c_adder_carry(uint64_t b) {
  */
 outType& c_comp_eq(uint64_t b) {
     // b-1 OR
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {(b-1), 32*(b-1), 0};
     return *out;
 }
@@ -141,7 +141,7 @@ outType& c_comp_mag(uint64_t b) {
 outType& c_LZC(uint64_t b) {
     // (b-1)*OR + sum (i=0, log(b)): (b/2^(i+1))*c_add(i)
     uint64_t gates = (uint64_t)(floor((double) b/2))* myLog2(b)+b-1;     // TODO: Formel Unsinn. Neu machen!
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {gates, 32*gates, 0};
     return *out;
 }
@@ -152,8 +152,8 @@ outType& c_LZC(uint64_t b) {
  * @return costs (gates, traffic, rounds) for decoding
  */
 outType& c_decode(uint64_t b) {
-    uint64_t powed = (uint64_t) pow(2, b);      // TODO: nötig?
-    outType* out = new outType;
+    auto powed = (uint64_t) pow(2, b);      // TODO: nötig?
+    auto* out = new outType;
     *out = {2*powed, 64*powed, 0};
     return *out;
 }
@@ -164,7 +164,7 @@ outType& c_decode(uint64_t b) {
  * @return costs (gates, traffic, rounds) for conditionally swapping two b-bit values
  */
 outType& c_condSwap(uint64_t b) {
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {b, 32*b, 0};
     return *out;
 }
@@ -189,8 +189,8 @@ outType& c_compEl(uint64_t b, uint64_t b2) {
  */
 outType& c_sort(uint64_t m, uint64_t b, uint16_t b2) {
     // compEl(b, b2)*((1/4)*m*(log^2(m)-log(m))+m-1)
-    uint64_t rounded = (uint64_t) ceil((double) m/4);
-    uint64_t powed = (uint64_t) pow(myLog2(m),2);
+    auto rounded = (uint64_t) ceil((double) m/4);
+    auto powed = (uint64_t) pow(myLog2(m),2);
     return (rounded*(powed-myLog2(m))+m-1)*c_compEl(b, b2);
     //return (b+b2)*(30*m+myLog2(m));
 }
@@ -224,7 +224,7 @@ outType& c_dDup(const uint64_t m, const uint64_t b) {
  * @return costs (gates, traffic, rounds) for creating an arbitrary b-bit value
  */
 outType& c_rand(uint64_t b) {
-    outType* out = new outType;
+    auto* out = new outType;
     *out = {0, b*32, 2};           // TODO: kosten für OT von b bit vermutlich - ne das wäre ja nur wenn von evaluator? -> Verwirrung des Todes!
     return *out;
 }

@@ -10,5 +10,5 @@ set(SOURCE_FILES main.cpp
         oram/oram.h
         oram/path_oram.cpp oram/path_oram.h
         helper.h
-        fast_calculator.cpp fast_calculator.h linear_scan.h oram/tree_factory.h settings.h evaluation/evaluator.cpp evaluation/evaluator.h)
+        fast_calculator.cpp fast_calculator.h trivial_linear_scan.h oram/tree_factory.h settings.h evaluation/evaluator.cpp evaluation/evaluator.h)
 add_executable(ORAMEvaluator ${SOURCE_FILES})

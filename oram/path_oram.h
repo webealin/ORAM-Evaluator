@@ -25,6 +25,9 @@ public:
     void build(uint16_t counter);
     void build();
     virtual Path* createMap(uint64_t newM);
+    virtual bool recursionCond(uint16_t counter) {      // TODO: muss doch irgendwie gehen, dass der hier nich überschrieben werden muss?
+        return counter > 0 && m > c;
+    }
     LinearScanOram* createBuckets();
     outType& c_LCA(uint64_t b);
     outType& c_RAR(uint64_t b);
@@ -73,6 +76,10 @@ public:
     outType& c_evictOnceW();
     outType& c_evictOnce();
     outType& c_addAndEvict();
+
+    inline bool recursionCond(uint16_t counter) override {
+        return counter > 0 && m > 4*c;
+    }
 };
 
 #endif //ORAMEVALUATOR_PATH_ORAM_H

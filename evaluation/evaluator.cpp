@@ -6,13 +6,13 @@
 #include "../fast_calculator.h"
 
 outType& Evaluator::find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
-    outType& out = noRead * LinearScan::read(m, b) + noWrite * LinearScan::write(m, b);
+    outType& out = noRead * TrivialLinearScan::read(m, b) + noWrite * TrivialLinearScan::write(m, b);
     std::cout << "Linear Scan: " << out << std::endl;
     return out;
 }
 
 outType& Evaluator::find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b) {
-    LinearScanOram* oram = (new LinearScanOram(m, b));
+    auto* oram = (new LinearScanOram(m, b));
     outType& out = noAcc*oram->c_acc(b);
     std::cout << "Linear Scan ORAM: " << out << std::endl;
     delete oram;
@@ -22,26 +22,26 @@ outType& Evaluator::find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b) 
 Evaluator::btSettings* Evaluator::find_best_BT(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam,
                              outType& (*acc)(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count)) {
     clock_t start = clock();
-    btSettings* minSettings = new btSettings;
+    auto *minSettings = new btSettings;         // TODO: Settings vllt einfach nicht als Pointer speichern? ^^
     *minSettings = {0, 0, 0, new outType};
     minSettings->out->gates = UINT64_MAX;
     uint16_t d = myLog2(m);
 
-    for(uint16_t B = bParam.min; B <= bParam.max; B = B*bParam.step_m + bParam.step_p) {
-        for(uint16_t c = 2; c <= d; c *= 2) {
-            for(uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
+    for (uint16_t B = bParam.min; B <= bParam.max; B = B * bParam.step_m + bParam.step_p) {
+        for (uint16_t c = 2; c <= d; c *= 2) {
+            for (uint16_t count = 1; count <= floor(log(m) / log(c)); count++) {
                 /*outType& accOut = */
-                outType& out = noAcc*acc(m, b, B, c, count);
-                if(out < *minSettings->out) {
+                outType &out = noAcc * acc(m, b, B, c, count);
+                if (out < *minSettings->out) {
                     delete &(minSettings->out);
                     *minSettings = {B, c, count, &out};
-                }
-                else delete &out;
+                } else delete &out;
             }
         }
     }
-    float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << type << ": B: " << minSettings->B << " c: " << minSettings->c << " count: " << minSettings->count << " out: " << *(minSettings->out) << " time needed: " << elapsed << std::endl;
+    float elapsed = (float) (clock() - start) / CLOCKS_PER_SEC;
+    std::cout << type << ": B: " << minSettings->B << " c: " << minSettings->c << " count: " << minSettings->count
+              << " out: " << *(minSettings->out) << " time needed: " << elapsed << std::endl;
     return minSettings;
 }
 
@@ -56,13 +56,12 @@ outType& acc_BT_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t co
     return c_acc_BT(m, b, B, count, c);
 }
 
-Evaluator::pathSettings* Evaluator::find_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
+Evaluator::pathSettings Evaluator::find_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
                                outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t stash, uint16_t count)) {
     clock_t start = clock();
-    btSettings* minBTSettings = new btSettings;
-    pathSettings* minSettings = new pathSettings;
-    minSettings->bt->out = new outType;
-    minSettings->bt->out->gates = UINT64_MAX;
+    outType minOut = {UINT64_MAX, UINT64_MAX, UINT16_MAX};
+    btSettings minBTSettings = {UINT16_MAX, UINT16_MAX, UINT16_MAX, &minOut};
+    pathSettings minSettings = {UINT16_MAX, &minBTSettings};
     uint16_t d = myLog2(m);
 
     for(uint16_t stash = sParam.min; stash <= sParam.max; stash = stash*sParam.step_m + sParam.step_p) {
@@ -70,19 +69,18 @@ Evaluator::pathSettings* Evaluator::find_best_Path(uint32_t noAcc, uint64_t m, u
             for (uint16_t c = 2; c <= d; c *= 2) {
                 for (uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
                     outType& out = noAcc*acc(m, b, B, c, stash, count);
-
-                    if (out < *minSettings->bt->out /*&& myLog2(noAcc) + myLog2(access) < 64*/) {
-                        delete &(minSettings->bt->out);
-                        *minBTSettings = {B, c, count, &out};
-                        *minSettings = {minBTSettings, stash};
+                    if (out < minOut) {
+                        minOut = {out.gates, out.traffic, out.rounds};
+                        minBTSettings = {B, c, count, &minOut};
+                        minSettings = {stash, &minBTSettings};
                     }
-                    else delete &out;
+                    delete &out;
                 }
             }
         }
     }
     float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << type << ": B: " << minSettings->bt->B << " c: " << minSettings->bt->c << " count: " << minSettings->bt->count << " stash: " << minSettings->stash << " out: " << *(minSettings->bt->out) << " time needed: " << elapsed << std::endl;
+    std::cout << type << ": B: " << minSettings.bt->B << " c: " << minSettings.bt->c << " count: " << minSettings.bt->count << " stash: " << minSettings.stash << " out: " << *(minSettings.bt->out) << " time needed: " << elapsed << std::endl;
     return minSettings;
 }
 
@@ -131,58 +129,58 @@ outType& acc_CORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t
 }
 
 void Evaluator::evaluate_exact(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
-    clock_t start = clock();
+    std::cout << "Evaluate exact - slow" << std::endl;
     uint16_t d = myLog2(m);
 
-    find_LinearScan(noRead, noWrite, m, b);
-    find_LinearScanORAM((noRead+noWrite), m, b);
+    /*outType& linearScan = find_LinearScan(noRead, noWrite, m, b);
+    delete &linearScan;
 
-    btSettings* minBTS = find_best_BT(noRead+noWrite, m, b, "Binary Tree ORAM - slow", evalParam{d, (uint16_t) (10*d), 1, d}, acc_BT_slow);
-    delete minBTS;
-    pathSettings* minPath = find_best_Path(noRead+noWrite, m, b, "Path ORAM - slow", evalParam{4, d, 1, 2}, evalParam{d, (uint16_t) 5*d, 1, 1}, acc_Path_slow);
-    delete minPath->bt;
-    delete minPath;
+    outType& linearScanOram = find_LinearScanORAM((noRead+noWrite), m, b);
+    delete &linearScanOram;*/
 
-    pathSettings* minPathSC = find_best_Path(noRead+noWrite, m, b, "PathSC ORAM - slow", evalParam{4, d, 2, 0}, evalParam{d, (uint16_t) 5*d, 1, 1}, acc_PathSC_slow);
+    for(int i = 0; i < 10; i++) {
+        btSettings *minBTS = find_best_BT(noRead + noWrite, m, b, "Binary Tree ORAM",
+                                          evalParam{d, static_cast<uint16_t>(5 * d), 1, d}, acc_BT_slow);
+        delete minBTS;
+    }
+
+    //find_best_Path(noRead+noWrite, m, b, "Path ORAM", evalParam{4, d, 1, 2}, evalParam{d,  static_cast<uint16_t>(5*d), 1, 1}, acc_Path_slow);
+
+    /*pathSettings* minPathSC = find_best_Path(noRead+noWrite, m, b, "PathSC ORAM", evalParam{4, d, 2, 0}, evalParam{d,  static_cast<uint16_t>(5*d), 1, 1}, acc_PathSC_slow);
     delete minPathSC->bt;
     delete minPathSC;
 
-    pathSettings* minSCORAM = find_best_Path(noRead+noWrite, m, b, "SCORAM - slow", evalParam{6, d, 1, 2}, evalParam{d, (uint16_t) 5*d, 1, 1}, acc_SCORAM_slow);
+    pathSettings* minSCORAM = find_best_Path(noRead+noWrite, m, b, "SCORAM", evalParam{6, d, 1, 2}, evalParam{d,  static_cast<uint16_t>(5*d), 1, 1}, acc_SCORAM_slow);
     delete minSCORAM->bt;
     delete minSCORAM;
 
-    pathSettings* minCORAM = find_best_Path(noRead+noWrite, m, b, "Circuit ORAM - slow", evalParam{4, d, 1, 2}, evalParam{d, (uint16_t) 5*d, 1, 1}, acc_CORAM_slow);
+    pathSettings* minCORAM = find_best_Path(noRead+noWrite, m, b, "Circuit ORAM", evalParam{4, d, 1, 2}, evalParam{d,  static_cast<uint16_t>(5*d), 1, 1}, acc_CORAM_slow);
     delete minCORAM->bt;
-    delete minCORAM;
-
-    float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << "time needed: " << elapsed << "\n" << std::endl;
+    delete minCORAM;*/
 }
 
 void Evaluator::evaluate_exact_fast(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
-    clock_t start = clock();
     uint16_t d = myLog2(m);
 
     find_LinearScan(noRead, noWrite, m, b);
     find_LinearScanORAM((noRead+noWrite), m, b);
 
-    btSettings* minBTS = find_best_BT(noRead+noWrite, m, b, "Binary Tree ORAM - fast", evalParam{d, (uint16_t) (10*d), 1, d}, acc_BT_fast);
+    btSettings* minBTS = find_best_BT(noRead+noWrite, m, b, "Binary Tree ORAM - fast", evalParam{d, static_cast<uint16_t>(5*d), 1, d}, acc_BT_fast);
     delete minBTS;
-    pathSettings* minPath = find_best_Path(noRead+noWrite, m, b, "Path ORAM - fast", evalParam{4, d, 1, 2}, evalParam{d, (uint16_t) 5*d, 1, 1}, acc_Path_fast);
+
+    /*pathSettings* minPath = find_best_Path(noRead+noWrite, m, b, "Path ORAM - fast", evalParam{4, d, 1, 2}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_Path_fast);
     delete minPath->bt;
     delete minPath;
 
-    pathSettings* minPathSC = find_best_Path(noRead+noWrite, m, b, "PathSC ORAM - fast", evalParam{4, d, 2, 0}, evalParam{d, (uint16_t) 5*d, 1, 1}, acc_PathSC_fast);
+    pathSettings* minPathSC = find_best_Path(noRead+noWrite, m, b, "PathSC ORAM - fast", evalParam{4, d, 2, 0}, evalParam{d,  static_cast<uint16_t>(5*d), 1, 1}, acc_PathSC_fast);
     delete minPathSC->bt;
     delete minPathSC;
 
-    pathSettings* minSCORAM = find_best_Path(noRead+noWrite, m, b, "SCORAM - fast", evalParam{6, d, 1, 2}, evalParam{d, (uint16_t) 5*d, 1, 1}, acc_SCORAM_fast);
+    pathSettings* minSCORAM = find_best_Path(noRead+noWrite, m, b, "SCORAM - fast", evalParam{6, d, 1, 2}, evalParam{d,  static_cast<uint16_t>(5*d), 1, 1}, acc_SCORAM_fast);
     delete minSCORAM->bt;
     delete minSCORAM;
 
-    pathSettings* minCORAM = find_best_Path(noRead+noWrite, m, b, "Circuit ORAM - fast", evalParam{4, d, 1, 2}, evalParam{d, (uint16_t) 5*d, 1, 1}, acc_CORAM_fast);
+    pathSettings* minCORAM = find_best_Path(noRead+noWrite, m, b, "Circuit ORAM - fast", evalParam{4, d, 1, 2}, evalParam{d,  static_cast<uint16_t>(5*d), 1, 1}, acc_CORAM_fast);
     delete minCORAM->bt;
-    delete minCORAM;
-    float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << "time needed: " << elapsed << "\n" << std::endl;
+    delete minCORAM;*/
 }

@@ -42,7 +42,7 @@ outType& c_acc_BT(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t 
 void test_BT_formulas() {
     // Circuit ORAM Benchmarks: use new formulas, bucketsize, counter and dynamic blocksize
     for(uint16_t c = 2; c <= 64; c *= 2)
-        std::cout << "Binary Tree: c = " << c << ": " << c_acc_BT((uint64_t) pow((double)2, 30), 32, 120, 8, c) << "\n" << std::endl;
+        std::cout << "Binary Tree: c = " << c << ": " << c_acc_BT((uint64_t) pow((double)2, 30), 32, 120, 8, c) << std::endl;
 }
 
 //       PATH          //
@@ -67,7 +67,7 @@ outType& c_acc_Path(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_
 void test_path_formulas() {
     // Circuit ORAM Benchmarks: use new formulas, bucketsize, counter and dynamic blocksize
     for(uint16_t c = 2; c <= 64; c *= 2)
-        std::cout << "Path: c = " << c << ": " << c_acc_Path((uint64_t) pow((double)2, 30), 32, 4, 8, 89, c) << "\n" << std::endl;
+        std::cout << "Path: c = " << c << ": " << c_acc_Path((uint64_t) pow((double)2, 30), 32, 4, 8, 89, c) << std::endl;
 }
 
 //       PATH-SC          //
@@ -94,7 +94,7 @@ outType& c_acc_PSC(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t
 void test_pathSC_formulas() {
     // Circuit ORAM Benchmarks: use new formulas, bucketsize, counter and dynamic blocksize
     for(uint16_t c = 2; c <= 64; c *= 2)
-        std::cout << "PathSC: c = " << c << ": " << c_acc_PSC((uint64_t) pow((double)2, 30), 32, 4, 8, 89, c) << "\n" << std::endl;
+        std::cout << "PathSC: c = " << c << ": " << c_acc_PSC((uint64_t) pow((double)2, 30), 32, 4, 8, 89, c) << std::endl;
 }
 
 
@@ -119,7 +119,7 @@ outType& c_acc_SCORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint1
 void test_SCORAM_formulas() {
     // Circuit ORAM Benchmarks: use new formulas, bucketsize, counter and dynamic blocksize
     for(uint16_t c = 2; c <= 64; c *= 2)
-        std::cout << "SCORAM: c = " << c << ": " << c_acc_SCORAM((uint64_t) pow((double)2, 30), 32, 6, 8, 141, c) << "\n" << std::endl;
+        std::cout << "SCORAM: c = " << c << ": " << c_acc_SCORAM((uint64_t) pow((double)2, 30), 32, 6, 8, 141, c) << std::endl;
 }
 
 //       Circuit ORAM          //
@@ -148,13 +148,13 @@ outType& c_acc_CORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16
 void test_CORAM_formulas() {
     // Circuit ORAM Benchmarks: use new formulas, bucketsize, counter and dynamic blocksize
     for(uint16_t c = 2; c <= 64; c *= 2)
-        std::cout << "CORAM: c = " << c << ": " << c_acc_CORAM((uint64_t) pow((double)2, 30), 32, 4, 8, 141, c) << "\n" << std::endl;
+        std::cout << "CORAM: c = " << c << ": " << c_acc_CORAM((uint64_t) pow((double)2, 30), 32, 4, 8, 141, c) << std::endl;
 }
 
 void test_fast_formulas() {
-    test_BT_formulas();
-    test_path_formulas();
-    test_pathSC_formulas();
-    test_SCORAM_formulas();
-    test_CORAM_formulas();
+    measure(test_BT_formulas);
+    measure(test_path_formulas);
+    measure(test_pathSC_formulas);
+    measure(test_SCORAM_formulas);
+    measure(test_CORAM_formulas);
 }

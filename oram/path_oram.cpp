@@ -194,7 +194,7 @@ outType& c_condAdd() {
  */
 outType& Scoram::c_minLCA(uint64_t m, uint64_t b) {
     // m(b-1)*OR + (m-1)*(compMag(b+1) + AND + mux(2b+3)
-    return m*(b-1)*c_lin_gate() + (m-1)*(c_comp_mag(b+1) + 1*c_lin_gate() + c_mux(2*b+3));                 // TODO OR / AND
+    return m*(b-1)*c_lin_gate() + (m-1)*(c_comp_mag(b+1) + 1*c_lin_gate() + c_mux(2*b+3));
 }
 
 /**
@@ -310,5 +310,5 @@ outType& Coram::c_evictOnce() {
  * @return costs for eviction of Circuit ORAM
  */
 outType& Coram::c_addAndEvict() {
-    return 2*(c_Y2B(B*d+s, bb) + c_PD() + c_PT() + c_evictOnce() + c_B2Y(B*d+s, bb));		// TODO: damit wären dann bei LSO ops die conversions doppelt :-|
+    return 2*(c_Y2B(B*d+s, bb) + c_PD() + c_PT() + c_evictOnce() + c_B2Y(B*d+s, bb));
 }

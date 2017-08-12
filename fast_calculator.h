@@ -37,4 +37,6 @@ void test_SCORAM_formulas();
 outType& c_acc_CORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c);
 void test_CORAM_formulas();
 
+void test_fast_formulas();
+
 #endif //ORAMEVALUATOR_FAST_CALCULATOR_H
