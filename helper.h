@@ -35,14 +35,17 @@ inline std::ostream& operator<<(std::ostream& ostr, const outType& i) {
     return ostr << "gates: " << i.gates << " traffic: " << i.traffic << " rounds: " << i.rounds;
 }
 
+inline std::ostream& operator<<(std::ostream& ostr, const outType* i) {
+    return ostr << "gates: " << i->gates << " traffic: " << i->traffic << " rounds: " << i->rounds;
+}
+
 inline outType& operator+ (const outType& a, const outType& b) {
     auto* out = new outType;
     *out = {a.gates + b.gates, a.traffic + b.traffic, std::max(a.rounds, b.rounds)};
 
-    if(out->gates < a.gates || out->gates < b.gates) {
-        //std::cout << "WARNING: Overflow of gates in addition: " << a.gates << " + " << b.gates<< std::endl;
+    if(out->gates < a.gates || out->gates < b.gates)
         out->gates = UINT64_MAX;
-    }
+
     if(out->traffic < a.traffic || out->traffic < b.traffic)
         out->traffic = UINT64_MAX;
 
@@ -65,21 +68,19 @@ inline outType& operator- (const outType& a, const outType& b) {
 inline outType& operator* (const uint64_t m, const outType& b) {
     auto* out = new outType;
     *out = {m*b.gates, m*b.traffic, b.rounds};
-    delete &b;
 
-
-    if(myLog2(m) + myLog2(b.gates) > 64) {
-        //std::cout << "WARNING: Overflow of gates in multiplication: " << b.gates << " * " << m << std::endl;
+    if(myLog2(m) + myLog2(b.gates) > 64)
         out->gates = UINT64_MAX;
-    }
-    if(myLog2(m) + myLog2(b.traffic) > 64) {
+
+    if(myLog2(m) + myLog2(b.traffic) > 64)
         out->traffic = UINT64_MAX;
-    }
+
+    delete &b;
 
     return *out;
 }
 
-inline outType& operator/ (const outType& b, const uint64_t d) {
+inline outType& operator/ (const outType& b, const uint16_t d) {
     auto* out = new outType;
     *out = {b.gates/d, b.traffic/d, d};
     delete &b;
@@ -92,17 +93,17 @@ inline bool operator< (const outType& a, const outType& b) {
     return out;
 }
 
-inline outType& addRounds (outType& outT, int rounds) {
+inline outType& addRounds (outType& outT, uint64_t rounds) {
     outT.rounds += rounds;
     return outT;
 }
 
-inline outType& multiplyRounds (outType& outT, int mul) {
+inline outType& multiplyRounds (outType& outT, uint64_t mul) {
     outT.rounds *= mul;
     return outT;
 }
 
-inline outType& divideRounds (outType& outT, int divisor) {
+inline outType& divideRounds (outType& outT, uint16_t divisor) {
     outT.rounds /= divisor;
     return outT;
 }

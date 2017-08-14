@@ -7,13 +7,15 @@
 
 #include "helper.h"
 #include <cmath>
+#include <cassert>
 #include "settings.h"
 
 outType& c_lin_gate();
 
 outType& c_Y2B(uint64_t m, uint64_t b);
 outType& c_B2Y(uint64_t m, uint64_t b);
-outType& c_sShare(uint64_t m, uint64_t b, bool values);
+outType& c_booleanShare(uint64_t m, uint64_t b);
+outType& c_yaoShare(uint64_t m, uint64_t b);
 
 outType& c_mux(uint64_t b);
 outType& c_mux(uint64_t m, uint64_t b);

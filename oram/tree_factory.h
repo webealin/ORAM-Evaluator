@@ -7,7 +7,7 @@
 
 #include "binary_tree_oram.h"
 #include "path_oram.h"
-#include "assert.h"
+#include <cassert>
 
 class TreeFactory {
 public:

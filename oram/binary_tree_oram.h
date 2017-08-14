@@ -18,15 +18,15 @@ protected:
     uint16_t B;                 // size of buckets
     uint16_t d;                 // depth of tree
     uint16_t c;                 // packing factor
-    ORAM* map;                  // ORAM that stores map
-    LinearScanOram* buckets;    // placeholder ORAM for buckets TODO: Interface für BucketORAM anlegen
+    ORAM* map{};                  // ORAM that stores map
+    LinearScanOram* buckets{};    // placeholder ORAM for buckets TODO: Interface für BucketORAM anlegen
 public:
     TreeInterface(uint64_t m, uint64_t b, uint16_t d, uint64_t bb, uint16_t B, uint16_t c, std::string type) :
             ORAM(m, b, bb, std::move(type)), c(c), B(B), d(d) { }
     virtual void build();
     virtual void build(uint16_t counter);
 
-    virtual ~TreeInterface() {
+    ~TreeInterface() override {
         delete map;
         delete buckets;
     }
@@ -42,7 +42,7 @@ public:
     }
 
     outType& c_evict();
-    outType& c_add();
+    outType& c_add() override;
     virtual outType& c_init(bool values);
     virtual outType& c_LUMU();
     virtual outType& c_RAR(uint64_t b);

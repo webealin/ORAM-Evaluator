@@ -5,6 +5,8 @@
 #ifndef ORAMEVALUATOR_ORAM_H
 #define ORAMEVALUATOR_ORAM_H
 
+#include <utility>
+
 #include "../helper.h"
 #include "../primitives.h"
 
@@ -15,8 +17,8 @@ protected:
     uint64_t bb;    // block width (payload + metadata)
     std::string type;
 public:
-    ORAM(uint64_t m, uint64_t b, uint64_t bb, std::string type) : m(m), b(b), bb(bb), type(type){}
-    virtual ~ORAM() {}
+    ORAM(uint64_t m, uint64_t b, uint64_t bb, std::string type) : m(m), b(b), bb(bb), type(std::move(type)){}
+    virtual ~ORAM() = default;
     virtual outType& c_init(bool values) = 0;
     virtual outType& c_acc(uint64_t b) = 0;
     virtual outType& c_add() = 0;

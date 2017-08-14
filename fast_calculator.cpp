@@ -10,19 +10,31 @@
 #include "primitives.h"
 
 outType& c_acc_LS(uint64_t m, uint64_t b, bool write) {
-    outType* outT = new outType;
+    auto* outT = new outType;
     *outT = {write? m*(b+2) : b*(m-1), 0, 0};
     return *outT;
 }
 
 outType& c_LS(uint64_t m, uint64_t b, uint16_t noRead, uint16_t noWrite) {
-    outType* outT = new outType;
+    auto* outT = new outType;
     *outT = {noRead*b*(m-1) + noWrite*m*(b+2), 0, 0};
     return *outT;
 }
 
+outType& c_acc_LSO(uint64_t m, uint64_t b, uint16_t bi) {
+    auto* out = new outType;
+    *out = {m*(b+bi-1), 0, 0};//512*m*(b+bi-(1/2)), 2};
+    return *out;
+}
+
+outType& c_LSO(uint64_t m, uint64_t b, uint16_t bi, uint16_t a) {
+    auto* out = new outType;
+    *out = {m*(b+bi-1), 0, 0};//(m*b)/a + 512*m*(b+bi-(1/2)), static_cast<uint16_t>(2*a+1)};
+    return *out;
+}
+
 outType& c_acc_BT(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t c) {
-    outType* outT = new outType;
+    auto* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
     uint64_t newB = b;
@@ -47,11 +59,11 @@ void test_BT_formulas() {
 
 //       PATH          //
 outType& c_acc_Path(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
-    outType* outT = new outType;
+    auto* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
     uint64_t newB = b;
-    uint16_t d = (uint16_t) (myLog2(m)-1);
+    auto d = (uint16_t) (myLog2(m)-1);
 
     while(counter-- >= 0 && newM > 2*c) {       // 2c because d = logm -1!
         d = (uint16_t) (myLog2(newM)-1);
@@ -72,11 +84,11 @@ void test_path_formulas() {
 
 //       PATH-SC          //
 outType& c_acc_PSC(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
-    outType* outT = new outType;
+    auto* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
     uint64_t newB = b;
-    uint16_t d = (uint16_t) (myLog2(m)-1);
+    auto d = (uint16_t) (myLog2(m)-1);
 
     while(counter-- >= 0 && newM > 2*c) {
         d = (uint16_t) (myLog2(newM)-1);
@@ -100,11 +112,11 @@ void test_pathSC_formulas() {
 
 //       SCORAM          //
 outType& c_acc_SCORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
-    outType* outT = new outType;
+    auto* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
     uint64_t newB = b;
-    uint16_t d = (uint16_t) (myLog2(m)-1);
+    auto d = (uint16_t) (myLog2(m)-1);
 
     while(counter-- >= 0 && newM > 2*c) {
         d = (uint16_t) (myLog2(newM)-1);
@@ -124,11 +136,11 @@ void test_SCORAM_formulas() {
 
 //       Circuit ORAM          //
 outType& c_acc_CORAM(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t s, uint16_t c) {
-    outType* outT = new outType;
+    auto* outT = new outType;
     uint64_t out = 0;
     uint64_t newM = m;
     uint64_t newB = b;
-    uint16_t d = (uint16_t) (myLog2(m)-1);
+    auto d = (uint16_t) (myLog2(m)-1);
 
     while(counter-- >= 0 && newM > 2*c) {
         d = (uint16_t) (myLog2(newM)-1);

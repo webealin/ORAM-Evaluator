@@ -7,26 +7,28 @@
 
 #include "binary_tree_oram.h"
 #include "../helper.h"
-#include "assert.h"
+#include <cassert>
+#include <utility>
 
 class Path : public TreeInterface {
 protected:
     uint16_t s;
-    LinearScanOram* stash;
+    LinearScanOram* stash{};
 public:
     Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, std::string type) :
-            TreeInterface(m, b, (uint16_t) (myLog2(m)-1), b+2* myLog2(m), B, c, type), s(s) {}
+            TreeInterface(m, b, (uint16_t) (myLog2(m)-1), b+2* myLog2(m), B, c, std::move(type)), s(s) {}
 
     Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) :
             TreeInterface(m, b, (uint16_t) (myLog2(m)-1), b+2* myLog2(m), B, c, "Path ORAM"), s(s) {}
-    virtual ~Path() {
+
+    ~Path() override {
         delete stash;
     }
-    void build(uint16_t counter);
-    void build();
+    void build(uint16_t counter) override;
+    void build() override;
     virtual Path* createMap(uint64_t newM);
-    virtual bool recursionCond(uint16_t counter) {      // TODO: muss doch irgendwie gehen, dass der hier nich überschrieben werden muss?
-        return counter > 0 && m > c;
+    virtual bool recursionCond(uint16_t counter) {
+        return counter > 0 && m > 8*c;          // d = log(m)-1 and log(d) is used
     }
     LinearScanOram* createBuckets();
     outType& c_LCA(uint64_t b);
@@ -67,7 +69,7 @@ class Coram : public Path {
 public:
     Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "Circuit ORAM") {}
     ~Coram() { }
-    Coram* createMap(uint64_t newM);
+    Coram* createMap(uint64_t newM) override;
     outType& c_minLCA(uint64_t m, uint64_t b);
     outType& c_PDStash();
     outType& c_PDStage();
@@ -75,11 +77,7 @@ public:
     outType& c_PT();
     outType& c_evictOnceW();
     outType& c_evictOnce();
-    outType& c_addAndEvict();
-
-    inline bool recursionCond(uint16_t counter) override {
-        return counter > 0 && m > 4*c;
-    }
+    outType& c_addAndEvict() override;
 };
 
 #endif //ORAMEVALUATOR_PATH_ORAM_H

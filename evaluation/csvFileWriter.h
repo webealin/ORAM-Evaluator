@@ -9,6 +9,7 @@
 #include <list>
 #include <iostream>
 #include <fstream>
+#include <utility>
 
 class CSVFileWriter {
 private:
@@ -17,10 +18,14 @@ private:
     std::string outRounds;
     std::string filename;
 public:
-    CSVFileWriter(std::string filename) : filename(filename) {}
-    void addLine(uint64_t lineX);
+    explicit CSVFileWriter(std::string filename) : filename(std::move(filename)) {}
+    void addLine(uint16_t lineX);
     void addOutType(outType* out);
+    void addOutType(outType out);
     void writeFiles();
+    void writeGates();
+    void writeTraffic();
+    void writeRounds();
 };
 
 #endif //ORAMEVALUATOR_FILEWRITER_H

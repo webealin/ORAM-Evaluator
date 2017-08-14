@@ -37,7 +37,19 @@ outType& c_Y2B(uint64_t m, uint64_t b) {
  */
 outType& c_B2Y(uint64_t m, uint64_t b) {
     auto* out = new outType;
-    *out = {0, m*32*b, 2};            // TODO: sicher?
+    *out = {0, m*32*b, 2};
+    return *out;
+}
+
+/**
+ * costs for establishing a Yao Share
+ * @param m number of elements to share
+ * @param b bitwidth per element
+ * @return costs /gates, traffic, rounds) for establishing a Yao share
+ */
+outType& c_yaoShare(uint64_t m, uint64_t b) {
+    auto* out = new outType;
+    *out = {0, 32*m*b, 2};
     return *out;
 }
 
@@ -45,14 +57,11 @@ outType& c_B2Y(uint64_t m, uint64_t b) {
  * costs for establishing a Boolean Share
  * @param m number of elements to share
  * @param b bitwidth per element
- * @param values true, if the values are already in place
  * @return costs /gates, traffic, rounds) for establishing a Boolean share
  */
-outType& c_sShare(uint64_t m, uint64_t b, bool values) {
+outType& c_booleanShare(uint64_t m, uint64_t b) {
     auto* out = new outType;
-    if(values)
-        *out = c_Y2B(m, b);
-    else *out = {0, m*b, 1};          // TODO: sicher?
+    *out = {0, m*b, 1};
     return *out;
 }
 
@@ -62,6 +71,7 @@ outType& c_sShare(uint64_t m, uint64_t b, bool values) {
  * @return costs (gates, traffic, rounds) for the multiplexer
  */
 outType& c_mux(uint64_t b) {
+    assert(b != 0);
     auto* out = new outType;
     *out = {b, 32*b, 0};
     return *out;
@@ -74,6 +84,7 @@ outType& c_mux(uint64_t b) {
  * @return costs (gates, traffic, rounds) for the multiplexer tree
  */
 outType& c_mux(uint64_t m, uint64_t b) {
+    assert(m != 0);
     // (m-1)*c_mux(b)
     return (m-1)*c_mux(b);
 }
@@ -85,6 +96,7 @@ outType& c_mux(uint64_t m, uint64_t b) {
  * @return costs (gates, traffic, rounds) for the multiplexer chain
  */
 outType& c_mux_chain(uint64_t m, uint64_t b) {
+    assert(m != 0);
     // m*c_mux(b)
     return m*c_mux(b);
 }
@@ -95,6 +107,7 @@ outType& c_mux_chain(uint64_t m, uint64_t b) {
  * @return costs (gates, traffic, rounds) of addition
  */
 outType& c_adder(uint64_t b) {
+    assert(b > 1);
     auto* out = new outType;
     *out = {(b-1), 32*(b-1), 0};
     return *out;
@@ -106,6 +119,7 @@ outType& c_adder(uint64_t b) {
  * @return costs (gates, traffic, rounds) of addition
  */
 outType& c_adder_carry(uint64_t b) {
+    assert(b != 0);
     auto* out = new outType;
     *out = {b, 32*b, 0};
     return *out;
@@ -117,6 +131,7 @@ outType& c_adder_carry(uint64_t b) {
  * @return costs (gates, traffic, rounds) of equality comparison
  */
 outType& c_comp_eq(uint64_t b) {
+    assert(b != 0);
     // b-1 OR
     auto* out = new outType;
     *out = {(b-1), 32*(b-1), 0};
@@ -139,6 +154,7 @@ outType& c_comp_mag(uint64_t b) {
  * @return costs (gates, traffic, rounds) for counting leading zeros
  */
 outType& c_LZC(uint64_t b) {
+    assert(b != 0);
     // (b-1)*OR + sum (i=0, log(b)): (b/2^(i+1))*c_add(i)
     uint64_t gates = (uint64_t)(floor((double) b/2))* myLog2(b)+b-1;     // TODO: Formel Unsinn. Neu machen!
     auto* out = new outType;
@@ -152,6 +168,7 @@ outType& c_LZC(uint64_t b) {
  * @return costs (gates, traffic, rounds) for decoding
  */
 outType& c_decode(uint64_t b) {
+    assert(b != 0);
     auto powed = (uint64_t) pow(2, b);      // TODO: nötig?
     auto* out = new outType;
     *out = {2*powed, 64*powed, 0};
@@ -164,6 +181,7 @@ outType& c_decode(uint64_t b) {
  * @return costs (gates, traffic, rounds) for conditionally swapping two b-bit values
  */
 outType& c_condSwap(uint64_t b) {
+    assert(b != 0);
     auto* out = new outType;
     *out = {b, 32*b, 0};
     return *out;
@@ -214,6 +232,7 @@ outType& c_shuffle(uint64_t m, uint64_t b) {
  * @return costs (gates, traffic, rounds) for filtering duplicates
  */
 outType& c_dDup(const uint64_t m, const uint64_t b) {
+    assert(m > 1);
     // (m-1)*compEq(b)
     return (m-1)*c_comp_eq(b);
 }
@@ -225,6 +244,6 @@ outType& c_dDup(const uint64_t m, const uint64_t b) {
  */
 outType& c_rand(uint64_t b) {
     auto* out = new outType;
-    *out = {0, b*32, 2};           // TODO: kosten für OT von b bit vermutlich - ne das wäre ja nur wenn von evaluator? -> Verwirrung des Todes!
+    *out = {0, 2*b, 2};
     return *out;
 }

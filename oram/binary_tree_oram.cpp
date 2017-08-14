@@ -41,8 +41,17 @@ void TreeInterface::build(uint16_t counter) {
  * @return costs for initialization of tree-based ORAM
  */
 outType& TreeInterface::c_init(bool values) {
-    // (2^(d+1)-1)*initBO(B, b)+m*rand(d)+initMap(m/c, b)+m*accBT(m, b)
-    return ((uint64_t) pow(2, d+1)-1)*buckets->c_init(values)+m*c_rand(d)+map->c_init(true)+m*c_add();
+    // (2^(d+1)-1)*initBO(B, bb)+m*rand(d)+initMap(m/c, b)
+    outType& out = ((uint64_t) pow(2, d+1)-1) * buckets->c_init(false) + map->c_init(false);
+
+    if(values) {
+        //outType& acc = c_acc(b);
+        //multiplyRounds(acc, m);
+        //addRounds(out, acc.rounds);
+        //return out + m * acc;
+        return out + m*c_acc(b);
+    }
+    return out;
 }
 
 /**
@@ -54,13 +63,23 @@ outType& TreeInterface::c_evict() {
     return (2*d-3)*(buckets->c_pop()+c_condSwap(bb)+2*buckets->c_add());        // TODO summe (wegen dem rand)
 }
 
+outType& c_dIdx(uint16_t b) {
+    auto* out = new outType;
+    *out = {0, b, 1};
+    return *out;
+}
+
 /**
  * lookup and map update for tree-based ORAM
  * @return costs for lookup and map update
  */
 outType& TreeInterface::c_LUMU() {
     //dIdx(myLog2(m))+dBIdx+Read_LS(c, log(m))+Write_LS(c, log(m))+acc_Map(m/c, b)
-    return TrivialLinearScan::read(c, d) + TrivialLinearScan::write(c, d) + map->c_acc(c*d);
+    //outType& acc = map->c_acc(c*d);
+    //outType& out = c_dIdx(d) + TrivialLinearScan::read(c, d) + TrivialLinearScan::write(c, d) + acc;
+    //addRounds(out, 1 + acc.rounds);
+    //return out;
+    return /*c_dIdx(d) +*/ TrivialLinearScan::read(c, d) + TrivialLinearScan::write(c, d) + map->c_acc(c*d);
 }
 
 /**
@@ -72,6 +91,12 @@ outType& BinaryTreeGKK::c_LUMU() {
     return TrivialLinearScan::read(c, d) + TrivialLinearScan::write(c, d) + map->c_acc(b);
 }
 
+outType& c_dPath(uint16_t b) {
+    auto* out = new outType;
+    *out = {0, b, 1};
+    return *out;
+}
+
 /**
  * ReadAndRemove: reads and removes element with the given id from the ORAM
  * @param b: number of bit to read during RAR (always includes payload and isDummy)
@@ -79,7 +104,10 @@ outType& BinaryTreeGKK::c_LUMU() {
  */
 outType& TreeInterface::c_RAR(uint64_t b) {
     //LUMU(m, b)+rand(d)+dPath+d*RAR_BO(B, b+1, d)
-    return c_LUMU()+c_rand(d)+d*buckets->c_RAR(b+1);
+    //outType& out = c_LUMU()+c_rand(d)+c_dPath(d)+d*buckets->c_RAR(b+1);
+    //addRounds(out, 3);  // d Path and share conversions of RAR
+    //return out;
+    return c_LUMU()+c_rand(d)/*+c_dPath(d)*/+d*buckets->c_RAR(b+1);
 }
 
 /**
@@ -98,7 +126,7 @@ outType& BinaryTreeGKK::c_RAR(uint64_t b) {
  */
 outType& TreeInterface::c_add() {
     //add_BO(B, bb)+evict(m, b)
-    return buckets->c_add()+c_evict();
+    return buckets->c_add()-c_B2Y(B, bb)+c_evict();
 }
 
 /**

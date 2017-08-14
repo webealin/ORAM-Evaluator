@@ -14,8 +14,8 @@ outType& c_acc_LS(uint64_t m, uint64_t b, bool write);
 outType& c_LS(uint64_t m, uint64_t b, uint16_t noRead, uint16_t noWrite);
 
 //         Linear Scan ORAM         //
-outType& c_acc_LSO(uint64_t m, uint64_t b);
-outType& c_LSO(uint64_t m, uint64_t b, uint16_t a);
+outType& c_acc_LSO(uint64_t m, uint64_t b, uint16_t bi);
+outType& c_LSO(uint64_t m, uint64_t b, uint16_t bi, uint16_t a);
 
 //         Binary Tree ORAM         //
 outType& c_acc_BT(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t c);

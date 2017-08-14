@@ -9,8 +9,11 @@
  * @return costs for initialization of LSO
  */
 outType& LinearScanOram::c_init(bool values) {
-    // init sShare(m, b)
-    return c_sShare(m, bb, values);
+    // if values, use Yao to Boolean conversion
+    if(values)
+        return c_Y2B(m, bb);
+    // else establish Boolean sharing
+    return c_booleanShare(m, bb);
 }
 
 /**
@@ -20,7 +23,7 @@ outType& LinearScanOram::c_init(bool values) {
  */
 outType& LinearScanOram::c_acc(uint64_t b) {
     // B2Y(m, b+b2) + m(mux(b)+compEq(b2))+Y2B(m, b+b2)
-    return c_B2Y(m, b+b2) + ((uint64_t) m*(c_mux(b)+c_comp_eq(b2))) + c_Y2B(m, b+b2);
+    return c_B2Y(m, b+b2) + (m*(c_mux(b)+c_comp_eq(b2))) + c_Y2B(m, b+b2);
 }
 
 /**
@@ -106,30 +109,37 @@ outType& LinearScanOram::c_amortized(uint16_t noAcc, bool values) {
  */
 outType& LinearScan::c_acc(uint64_t b) {
     // m(mux(b)+compEq(b2))
-    outType& out = ((uint64_t) m*(c_mux(b)+c_comp_eq(b2)));
-    return out;
+    //outType& out = ((uint64_t) m*(c_mux(b)+c_comp_eq(b2)));
+    //return out;
+    return m*(c_mux(b)+c_comp_eq(b2));
 }
 
 outType& LinearScan::c_init(bool values) {
-    std::cout << "error: this function should not be invoked" << std::endl;
-    auto* out = new outType;     // TODO
-    *out = {0, 0, 0};
+    if(values) {
+        auto* out = new outType;
+        *out = {0, 0, 0};
+        return *out;
+    }
+    return c_yaoShare(m, bb);
 }
 
 outType& LinearScan::c_amortized(uint16_t noAcc, bool values) {
     std::cout << "error: this function should not be invoked" << std::endl;
     auto* out = new outType;     // TODO
     *out = {0, 0, 0};
+    return *out;
 }
 
 outType& LinearScan::c_RAR(uint64_t b) {
     std::cout << "error: this function should not be invoked" << std::endl;
     auto* out = new outType;     // TODO
     *out = {0, 0, 0};
+    return *out;
 }
 
 outType& LinearScan::c_add() {
     std::cout << "error: this function should not be invoked" << std::endl;
     auto* out = new outType;     // TODO
     *out = {0, 0, 0};
+    return *out;
 }

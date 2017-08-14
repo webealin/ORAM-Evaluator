@@ -28,8 +28,8 @@ public:
      * @return costs for write access
      */
     static inline outType& write(uint64_t m, uint64_t b) {
-        // m*mux(b)+decode(m)+???Reencryption   // TODO
-        return ((uint64_t) m*c_mux(b))+c_decode(myLog2(m));
+        // m*mux(b)+decode(m)
+        return (m*c_mux(b))+c_decode(myLog2(m));
     }
 };
 #endif //ORAMEVALUATOR_LINEAR_SCAN_H
