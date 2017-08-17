@@ -7,7 +7,6 @@
 
 #include "../oram/tree_factory.h"
 #include <ctime>
-#include "../trivial_linear_scan.h"
 #include "../fast_calculator.h"
 
 class Evaluator {

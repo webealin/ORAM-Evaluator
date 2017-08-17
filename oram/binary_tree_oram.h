@@ -13,7 +13,7 @@
 /**
  * interface for all tree-based constructions
  */
-class TreeInterface : public ORAM {
+class TreeInterface : public extendedORAM {
 protected:
     uint16_t B;                 // size of buckets
     uint16_t d;                 // depth of tree
@@ -22,7 +22,7 @@ protected:
     LinearScanOram* buckets{};    // placeholder ORAM for buckets TODO: Interface für BucketORAM anlegen
 public:
     TreeInterface(uint64_t m, uint64_t b, uint16_t d, uint64_t bb, uint16_t B, uint16_t c, std::string type) :
-            ORAM(m, b, bb, std::move(type)), c(c), B(B), d(d) { }
+            extendedORAM(m, b, bb, std::move(type)), c(c), B(B), d(d) { }
     virtual void build();
     virtual void build(uint16_t counter);
 
@@ -37,8 +37,8 @@ public:
         return new LinearScanOram(B, b+d+1, d, false);   // note that LSO sets bb to b+d (adds vid for itself)!
     }
 
-    inline virtual LinearScan* createLSMap(uint64_t newM) {
-        return new LinearScan(newM, c*d, myLog2(c));
+    inline virtual TrivialLinearScan* createLSMap(uint64_t newM) {
+        return new TrivialLinearScan(newM, c*d);
     }
 
     outType& c_evict();
@@ -93,8 +93,8 @@ public:
         return new BinaryTreeGKK(newM, b, c);
     }
 
-    inline LinearScan* createLSMap(uint64_t newM) override {
-        return new LinearScan(newM, b, myLog2(b / myLog2(m)));
+    inline TrivialLinearScan* createLSMap(uint64_t newM) override {
+        return new TrivialLinearScan(newM, b);
     }
 
     inline LinearScanOram* createBuckets() override {

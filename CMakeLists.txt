@@ -10,7 +10,7 @@ set(SOURCE_FILES main.cpp
         oram/binary_tree_oram.cpp oram/binary_tree_oram.h
         oram/path_oram.cpp oram/path_oram.h
         helper.h settings.h
-        fast_calculator.cpp fast_calculator.h trivial_linear_scan.h
+        fast_calculator.cpp fast_calculator.h
         oram/tree_factory.h
         evaluation/evaluator.cpp evaluation/evaluator.h
         evaluation/plotter.cpp evaluation/plotter.h

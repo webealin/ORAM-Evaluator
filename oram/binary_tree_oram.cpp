@@ -2,7 +2,6 @@
 // Created by weber on 30.06.2017.
 //
 #include "binary_tree_oram.h"
-#include "../trivial_linear_scan.h"
 
 /**
  * construction of the structure using recursive trees until depth would be smaller 12 (GKK)
@@ -79,7 +78,7 @@ outType& TreeInterface::c_LUMU() {
     //outType& out = c_dIdx(d) + TrivialLinearScan::read(c, d) + TrivialLinearScan::write(c, d) + acc;
     //addRounds(out, 1 + acc.rounds);
     //return out;
-    return /*c_dIdx(d) +*/ TrivialLinearScan::read(c, d) + TrivialLinearScan::write(c, d) + map->c_acc(c*d);
+    return /*c_dIdx(d) +*/ TrivialLinearScan::c_read(c, d) + TrivialLinearScan::c_write(c, d) + map->c_acc(c*d);
 }
 
 /**
@@ -88,7 +87,7 @@ outType& TreeInterface::c_LUMU() {
  */
 outType& BinaryTreeGKK::c_LUMU() {
     //dIdx(myLog2(m))+dBIdx+Read_LS(c, log(m))+Write_LS(c, log(m))+acc_Map(m/c, b)
-    return TrivialLinearScan::read(c, d) + TrivialLinearScan::write(c, d) + map->c_acc(b);
+    return TrivialLinearScan::c_read(c, d) + TrivialLinearScan::c_write(c, d) + map->c_acc(b);
 }
 
 outType& c_dPath(uint16_t b) {

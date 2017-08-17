@@ -53,7 +53,7 @@ int main() {
     //test_fast_formulas();
     //measure(evaluate);
     //measure(evaluate_fast);
-    measure(plot);
+    //measure(plot);
 
     return 0;
 }
