@@ -13,7 +13,7 @@
  */
 outType& c_lin_gate() {
     auto* out = new outType;
-    *out = {1, 32, 0};
+    *out = {1, 256, 0};
     return *out;
 }
 
@@ -37,7 +37,7 @@ outType& c_Y2B(uint64_t m, uint64_t b) {
  */
 outType& c_B2Y(uint64_t m, uint64_t b) {
     auto* out = new outType;
-    *out = {0, m*32*b, 2};
+    *out = {0, m*256*b, 2};
     return *out;
 }
 
@@ -49,7 +49,7 @@ outType& c_B2Y(uint64_t m, uint64_t b) {
  */
 outType& c_yaoShare(uint64_t m, uint64_t b) {
     auto* out = new outType;
-    *out = {0, 32*m*b, 2};
+    *out = {0, 256*m*b, 2};
     return *out;
 }
 
@@ -73,7 +73,7 @@ outType& c_booleanShare(uint64_t m, uint64_t b) {
 outType& c_mux(uint64_t b) {
     assert(b != 0);
     auto* out = new outType;
-    *out = {b, 32*b, 0};
+    *out = {b, 256*b, 0};
     return *out;
 }
 
@@ -109,7 +109,7 @@ outType& c_mux_chain(uint64_t m, uint64_t b) {
 outType& c_adder(uint64_t b) {
     assert(b > 1);
     auto* out = new outType;
-    *out = {(b-1), 32*(b-1), 0};
+    *out = {(b-1), 256*(b-1), 0};
     return *out;
 }
 
@@ -121,7 +121,7 @@ outType& c_adder(uint64_t b) {
 outType& c_adder_carry(uint64_t b) {
     assert(b != 0);
     auto* out = new outType;
-    *out = {b, 32*b, 0};
+    *out = {b, 256*b, 0};
     return *out;
 }
 
@@ -134,7 +134,7 @@ outType& c_comp_eq(uint64_t b) {
     assert(b != 0);
     // b-1 OR
     auto* out = new outType;
-    *out = {(b-1), 32*(b-1), 0};
+    *out = {(b-1), 256*(b-1), 0};
     return *out;
 }
 
@@ -158,7 +158,7 @@ outType& c_LZC(uint64_t b) {
     // (b-1)*OR + sum (i=0, log(b)): (b/2^(i+1))*c_add(i)
     uint64_t gates = (uint64_t)(floor((double) b/2))* myLog2(b)+b-1;     // TODO: Formel Unsinn. Neu machen!
     auto* out = new outType;
-    *out = {gates, 32*gates, 0};
+    *out = {gates, 256*gates, 0};
     return *out;
 }
 
@@ -168,10 +168,9 @@ outType& c_LZC(uint64_t b) {
  * @return costs (gates, traffic, rounds) for decoding
  */
 outType& c_decode(uint64_t b) {
-    assert(b != 0);
     auto powed = (uint64_t) pow(2, b);      // TODO: nötig?
     auto* out = new outType;
-    *out = {2*powed, 64*powed, 0};
+    *out = {2*powed, 512*powed, 0};
     return *out;
 }
 
@@ -183,7 +182,7 @@ outType& c_decode(uint64_t b) {
 outType& c_condSwap(uint64_t b) {
     assert(b != 0);
     auto* out = new outType;
-    *out = {b, 32*b, 0};
+    *out = {b, 256*b, 0};
     return *out;
 }
 

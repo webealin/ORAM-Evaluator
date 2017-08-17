@@ -5,7 +5,9 @@
 #include "evaluator.h"
 
 outType Evaluator::find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
-    outType& out = noRead * TrivialLinearScan::read(m, b) + noWrite * TrivialLinearScan::write(m, b);
+    outType& out = addWR(multiplyWR(noRead, TrivialLinearScan::c_read(m, b)), multiplyWR(noWrite,
+                                                                                         TrivialLinearScan::c_write(m,
+                                                                                                                    b)));
     outType ret = {out.gates, out.traffic, out.rounds};
     delete &out;
     return ret;
@@ -17,7 +19,7 @@ void Evaluator::print_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, 
 
 outType Evaluator::find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b) {
     auto* oram = new LinearScanOram(m, b);
-    outType& out = noAcc*oram->c_acc(b);
+    outType& out = multiplyWR(noAcc, oram->c_acc(b));
     delete oram;
     outType ret = {out.gates, out.traffic, out.rounds};
     delete &out;
@@ -37,7 +39,7 @@ Evaluator::btSettings Evaluator::find_best_BT(uint32_t noAcc, uint64_t m, uint64
     for (uint16_t B = bParam.min; B <= bParam.max; B = B * bParam.step_m + bParam.step_p) {
         for (uint16_t c = 2; c <= d; c *= 2) {
             for (uint16_t count = 1; count <= floor(log(m) / log(c)); count++) {
-                outType &out = noAcc * acc(m, b, B, c, count);
+                outType &out = multiplyWR(noAcc, acc(m, b, B, c, count));
                 if (out < minOut) {
                     minOut = {out.gates, out.traffic, out.rounds};
                     minSettings = {B, c, count, &minOut};
@@ -78,7 +80,7 @@ Evaluator::pathSettings Evaluator::find_best_Path(uint32_t noAcc, uint64_t m, ui
         for(uint16_t B = bParam.min; B <= bParam.max; B = B*bParam.step_m + bParam.step_p) {
             for (uint16_t c = 2; c <= d; c *= 2) {
                 for (uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
-                    outType& out = noAcc*acc(m, b, B, c, stash, count);
+                    outType& out = multiplyWR(noAcc, acc(m, b, B, c, stash, count));
                     if (out < minOut) {
                         minOut = {out.gates, out.traffic, out.rounds};
                         minBTSettings = {B, c, count, &minOut};

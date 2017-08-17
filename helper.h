@@ -14,6 +14,21 @@ struct outType {
     uint64_t gates;
     uint64_t traffic;
     uint64_t rounds;
+
+    inline outType& operator+= (const outType& b) {
+        if(gates + b.gates < gates || gates + b.gates < b.gates)
+            gates = UINT64_MAX;
+        else gates += b.gates;
+
+        if(traffic + b.traffic < traffic || traffic + b.traffic < b.traffic)
+            traffic = UINT64_MAX;
+        else traffic += b.traffic;
+        rounds = std::max(rounds, b.rounds);
+
+        delete &b;
+
+        return *this;
+    }
 };
 
 inline void measure(void (*func)()) {
@@ -55,6 +70,15 @@ inline outType& operator+ (const outType& a, const outType& b) {
     return *out;
 }
 
+inline outType& addWR(const outType &a, const outType &b) {
+    uint64_t rounds = a.rounds + b.rounds;
+    //std::cout << "a: " << a.rounds << " b: " << b.rounds << " a+b: " << rounds << std::endl;
+    outType& out = a + b;
+    out.rounds = rounds;
+
+    return out;
+}
+
 inline outType& operator- (const outType& a, const outType& b) {
     auto* out = new outType;
     *out = {a.gates - b.gates, a.traffic - b.traffic, std::max(a.rounds, b.rounds)};
@@ -63,6 +87,14 @@ inline outType& operator- (const outType& a, const outType& b) {
     delete &b;
 
     return *out;
+}
+
+inline outType& minusWR(const outType &a, const outType &b) {
+    uint64_t rounds = a.rounds - b.rounds;
+    outType& out = a - b;
+    out.rounds = rounds;
+
+    return out;
 }
 
 inline outType& operator* (const uint64_t m, const outType& b) {
@@ -80,6 +112,14 @@ inline outType& operator* (const uint64_t m, const outType& b) {
     return *out;
 }
 
+inline outType& multiplyWR(const uint64_t m, const outType &b) {
+    uint64_t rounds = m * b.rounds;
+    outType& out = m * b;
+    out.rounds = rounds;
+
+    return out;
+}
+
 inline outType& operator/ (const outType& b, const uint16_t d) {
     auto* out = new outType;
     *out = {b.gates/d, b.traffic/d, d};
@@ -88,24 +128,17 @@ inline outType& operator/ (const outType& b, const uint16_t d) {
     return *out;
 }
 
-inline bool operator< (const outType& a, const outType& b) {
-    bool out = a.gates < b.gates;       // TODO: Kostenfunktion
+inline outType& divideWR(const outType& b, const uint16_t d) {
+    uint64_t rounds = b.rounds / d;
+    outType& out = b / d;
+    out.rounds = rounds;
+
     return out;
 }
 
-inline outType& addRounds (outType& outT, uint64_t rounds) {
-    outT.rounds += rounds;
-    return outT;
-}
-
-inline outType& multiplyRounds (outType& outT, uint64_t mul) {
-    outT.rounds *= mul;
-    return outT;
-}
-
-inline outType& divideRounds (outType& outT, uint16_t divisor) {
-    outT.rounds /= divisor;
-    return outT;
+inline bool operator< (const outType& a, const outType& b) {
+    bool out = a.gates < b.gates;       // TODO: Kostenfunktion
+    return out;
 }
 
 #endif //ORAMEVALUATOR_HELPER_H

@@ -13,8 +13,8 @@ void Plotter::plot_Elements(evalParam dParam, uint64_t b) {
         writer->addLine(d);
         auto m = (uint64_t) pow(2, d);
 
-        writer->addOutType(find_LinearScan(1, 0, m, b));
-        writer->addOutType(find_LinearScan(0, 1, m, b));
+        //writer->addOutType(find_LinearScan(1, 0, m, b));
+        //writer->addOutType(find_LinearScan(0, 1, m, b));
         writer->addOutType(find_best_BT(1, m, b, evalParam{d, static_cast<uint16_t>(10*d), 1, d}, acc_BT_fast).out);
         writer->addOutType(find_best_Path(1, m, b, evalParam{4, d, 1, 2}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_Path_fast).bt->out);
         writer->addOutType(find_best_Path(1, m, b, evalParam{4, d, 2, 0}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_PathSC_fast).bt->out);

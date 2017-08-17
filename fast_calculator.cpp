@@ -23,13 +23,13 @@ outType& c_LS(uint64_t m, uint64_t b, uint16_t noRead, uint16_t noWrite) {
 
 outType& c_acc_LSO(uint64_t m, uint64_t b, uint16_t bi) {
     auto* out = new outType;
-    *out = {m*(b+bi-1), 0, 0};//512*m*(b+bi-(1/2)), 2};
+    *out = {2*m*(b+bi-1), 512*m*(2*b+bi-(1/2)), 2};
     return *out;
 }
 
 outType& c_LSO(uint64_t m, uint64_t b, uint16_t bi, uint16_t a) {
     auto* out = new outType;
-    *out = {m*(b+bi-1), 0, 0};//(m*b)/a + 512*m*(b+bi-(1/2)), static_cast<uint16_t>(2*a+1)};
+    *out = {m*(b+bi-1), (m*b)/a + 512*m*(b+bi-(1/2)), static_cast<uint16_t>(2*a+1)};
     return *out;
 }
 
@@ -40,7 +40,7 @@ outType& c_acc_BT(uint64_t m, uint64_t b, uint16_t B, int16_t counter, uint16_t 
     uint64_t newB = b;
     uint16_t d = myLog2(m);
 
-    while(counter-- >= 0 && newM > c) {
+    while(counter-- >= 0 && newM > 2*c) {
         d = myLog2(newM);
         out += B*(d*(7*newB+13*d+6)-8*newB-27)+d*(2*newB+2*c+4*d-19)-3*newB+2*c+16;
         newM = (uint64_t) ceil((double) newM/c);
