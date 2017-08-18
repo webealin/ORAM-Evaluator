@@ -69,7 +69,7 @@ outType& LinearScan::c_init(bool values) {
  */
 outType& LinearScan::c_acc(uint64_t b) {
     // m(mux(b)+compEq(b2))
-    return m*(2*c_mux(b)+c_comp_eq(b2));
+    return c_yaoShare(1, bb) + m*(2*c_mux(b)+c_comp_eq(b2));
 }
 
 /**
@@ -90,10 +90,10 @@ outType& LinearScan::c_amortized(uint16_t noAcc, bool values) {
 outType& LinearScan::c_RAR(uint64_t b) {
     if(useOldFormula)
         // m*(2*compEq(b2)+AND+OR+mux(b))
-        return m * (2*c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b));
+        return c_yaoShare(1, bb) + m * (2*c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b));
 
     // m*(compEq(b2)+AND+OR+mux(b))
-    return m*(c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b));
+    return c_yaoShare(1, bb) + m*(c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b));
 }
 
 /**
@@ -134,9 +134,9 @@ outType& LinearScan::c_cAdd(outType& (*cond)()) {
 outType& LinearScan::c_pop() {
     if(useOldFormula)
         // (m-1)(2*OR+AND)+m*(compEq(b2)+mux(bb))
-        return (m-1)*3*c_lin_gate() + m*(c_comp_eq(b2) + c_mux(bb));
+        return c_yaoShare(1, bb) + (m-1)*3*c_lin_gate() + m*(c_comp_eq(b2) + c_mux(bb));
     // B2Y(m, bb) + (m-1)(2*OR+AND)+m*mux(bb) + Y2B(m, bb)
-    return (m-1)*3*c_lin_gate() + m*(c_mux(bb));
+    return c_yaoShare(1, bb) + (m-1)*3*c_lin_gate() + m*(c_mux(bb));
 }
 
 /**

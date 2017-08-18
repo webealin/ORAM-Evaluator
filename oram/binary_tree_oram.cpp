@@ -2,6 +2,7 @@
 // Created by weber on 30.06.2017.
 //
 #include "binary_tree_oram.h"
+#include <typeinfo>
 
 /**
  * construction of the structure using recursive trees until depth would be smaller 12 (GKK)
@@ -43,13 +44,9 @@ outType& TreeInterface::c_init(bool values) {
     // (2^(d+1)-1)*initBO(B, bb)+m*rand(d)+initMap(m/c, b)
     outType& out = ((uint64_t) pow(2, d+1)-1) * buckets->c_init(false) + map->c_init(false);
 
-    if(values) {
-        //outType& acc = c_acc(b);
-        //multiplyRounds(acc, m);
-        //addRounds(out, acc.rounds);
-        //return out + m * acc;
-        return out + m*c_acc(b);
-    }
+    if(values)
+        return addWR(out, multiplyWR(m, c_acc(b)));
+
     return out;
 }
 
@@ -73,12 +70,7 @@ outType& c_dIdx(uint16_t b) {
  * @return costs for lookup and map update
  */
 outType& TreeInterface::c_LUMU() {
-    //dIdx(myLog2(m))+dBIdx+Read_LS(c, log(m))+Write_LS(c, log(m))+acc_Map(m/c, b)
-    //outType& acc = map->c_acc(c*d);
-    //outType& out = c_dIdx(d) + TrivialLinearScan::read(c, d) + TrivialLinearScan::write(c, d) + acc;
-    //addRounds(out, 1 + acc.rounds);
-    //return out;
-    return /*c_dIdx(d) +*/ TrivialLinearScan::c_read(c, d) + TrivialLinearScan::c_write(c, d) + map->c_acc(c*d);
+    return addWR(c_dIdx(d), TrivialLinearScan::c_read(c, d) + TrivialLinearScan::c_write(c, d) + map->c_acc(c*d));
 }
 
 /**
@@ -87,7 +79,7 @@ outType& TreeInterface::c_LUMU() {
  */
 outType& BinaryTreeGKK::c_LUMU() {
     //dIdx(myLog2(m))+dBIdx+Read_LS(c, log(m))+Write_LS(c, log(m))+acc_Map(m/c, b)
-    return TrivialLinearScan::c_read(c, d) + TrivialLinearScan::c_write(c, d) + map->c_acc(b);
+    return addWR(c_dIdx(d), TrivialLinearScan::c_read(c, d) + TrivialLinearScan::c_write(c, d) + map->c_acc(b));
 }
 
 outType& c_dPath(uint16_t b) {
@@ -103,10 +95,7 @@ outType& c_dPath(uint16_t b) {
  */
 outType& TreeInterface::c_RAR(uint64_t b) {
     //LUMU(m, b)+rand(d)+dPath+d*RAR_BO(B, b+1, d)
-    //outType& out = c_LUMU()+c_rand(d)+c_dPath(d)+d*buckets->c_RAR(b+1);
-    //addRounds(out, 3);  // d Path and share conversions of RAR
-    //return out;
-    return c_LUMU()+c_rand(d)/*+c_dPath(d)*/+d*buckets->c_RAR(b+1);
+    return addWR(c_LUMU(), addWR(c_dPath(d), c_rand(d) + d*buckets->c_RAR(b+1)));
 }
 
 /**
@@ -116,7 +105,8 @@ outType& TreeInterface::c_RAR(uint64_t b) {
  */
 outType& BinaryTreeGKK::c_RAR(uint64_t b) {
     //LUMU(m, b)+rand(d)+dPath+d*RAR_BO(B, b+d, d)
-    return c_LUMU()+c_rand(d)+d*buckets->c_RAR(b+d);
+    outType& out = addWR(c_LUMU(), addWR(c_dPath(d), d*buckets->c_RAR(b+d)));
+    return (typeid(*map) == typeid(TrivialLinearScan))? out+c_yaoShare(1, d) : out;
 }
 
 /**
@@ -135,7 +125,7 @@ outType& TreeInterface::c_add() {
  */
 outType& TreeInterface::c_acc(uint64_t b) {
     //RAR(m, b)+add(m, b)
-    return c_RAR(b)+c_add();
+    return addWR(c_RAR(b), c_add());
 }
 
 /**

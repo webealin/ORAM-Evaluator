@@ -21,7 +21,7 @@ void test_CORAM() {
 
 void test_paper_benchmarks() {
     measure(test_GKK);
-    measure(test_CORAM);
+   // measure(test_CORAM);
 }
 
 void evaluate() {
