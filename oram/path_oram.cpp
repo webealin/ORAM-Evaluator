@@ -11,7 +11,7 @@ void Path::build(uint16_t counter) {
 
 void Path::build() {
     TreeInterface::build();
-    stash = new LinearScanOram(s, b+d+1, (uint16_t)(d+1), false);
+    stash = new LinearScan(s, b+d+1, (uint16_t)(d+1), false);
 }
 
 /**
@@ -227,6 +227,11 @@ outType& Scoram::c_addAndEvict() {
                         /********************************************/
                         /**********      Circuit ORAM      **********/
                         /********************************************/
+
+void Coram::build() {
+    TreeInterface::build();
+    stash = new LinearScanOram(s, b+d+1, (uint16_t)(d+1), false);
+}
 
 /**
  * helper operation for constructing new Circuit ORAM map

@@ -13,10 +13,10 @@
 class Path : public TreeInterface {
 protected:
     uint16_t s;
-    LinearScanOram* stash{};
+    LinearScan* stash{};
 public:
-    Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, std::string type) :
-            TreeInterface(m, b, (uint16_t) (myLog2(m)-1), b+2* myLog2(m), B, c, std::move(type)), s(s) {}
+    Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, const std::string& type) :
+            TreeInterface(m, b, (uint16_t) (myLog2(m)-1), b+2* myLog2(m), B, c, type), s(s) {}
 
     Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) :
             TreeInterface(m, b, (uint16_t) (myLog2(m)-1), b+2* myLog2(m), B, c, "Path ORAM"), s(s) {}
@@ -26,15 +26,18 @@ public:
     }
     void build(uint16_t counter) override;
     void build() override;
-    virtual Path* createMap(uint64_t newM);
-    virtual bool recursionCond(uint16_t counter) {
+
+    Path* createMap(uint64_t newM) override;
+    inline bool recursionCond(uint16_t counter) override {
         return counter > 0 && m > 8*c;          // d = log(m)-1 and log(d) is used
     }
-    LinearScanOram* createBuckets();
+    LinearScanOram* createBuckets() override;
+
+    outType& c_init(bool values) override;
+    outType& c_acc(uint64_t b) override;
+    outType& c_RAR(uint64_t b) override;
+
     outType& c_LCA(uint64_t b);
-    outType& c_RAR(uint64_t b);
-    outType& c_acc(uint64_t b);
-    outType& c_init(bool values);
     virtual outType& c_addAndEvict();
 };
 
@@ -44,9 +47,9 @@ public:
         // B has to be power of two otherwise c_offset would need to include multiplier
         assert(isPowerOfTwo(B));
     }
-    ~PathSC() { }
-    PathSC* createMap(uint64_t newM);
-    outType& c_addAndEvict();
+    PathSC* createMap(uint64_t newM) override;
+    outType& c_addAndEvict() override;
+
     outType& c_dud(uint64_t m, uint64_t b);
     outType& c_offset(uint64_t m, uint64_t b);
     outType& sort1();
@@ -56,9 +59,9 @@ public:
 class Scoram : public Path {
 public:
     Scoram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "SCORAM") {}
-    ~Scoram() { }
-    Scoram* createMap(uint64_t newM);
-    outType& c_addAndEvict();
+    Scoram* createMap(uint64_t newM) override;
+    outType& c_addAndEvict() override;
+
     outType& c_cPut();
     outType& c_minLCA(uint64_t m, uint64_t b);
     outType& c_RDP();
@@ -68,8 +71,11 @@ public:
 class Coram : public Path {
 public:
     Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "Circuit ORAM") {}
-    ~Coram() { }
+    void build() override;
+
     Coram* createMap(uint64_t newM) override;
+    outType& c_addAndEvict() override;
+
     outType& c_minLCA(uint64_t m, uint64_t b);
     outType& c_PDStash();
     outType& c_PDStage();
@@ -77,7 +83,6 @@ public:
     outType& c_PT();
     outType& c_evictOnceW();
     outType& c_evictOnce();
-    outType& c_addAndEvict() override;
 };
 
 #endif //ORAMEVALUATOR_PATH_ORAM_H
