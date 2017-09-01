@@ -223,7 +223,7 @@ outType& c_shuffle(uint64_t m, uint64_t b) {
     uint64_t elements = (m * myLog2(m) - m + 1);
     auto* out = new outType;
     out->gates = 2*b*elements + 2*myLog2(m)*elements;
-    out->traffic = 256*4*elements;
+    out->traffic = 256*(out->gates + 3*elements);//256*4*elements;
     out->rounds = 2;
     return *out;
 }
