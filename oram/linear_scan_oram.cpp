@@ -38,7 +38,7 @@ outType& TrivialLinearScan::c_acc(uint64_t b) {
  * @param values: true if the values are in place during initialization
  * @return amortized costs per access
  */
-outType& TrivialLinearScan::c_amortized(uint16_t noAcc, bool values) {
+outType& TrivialLinearScan::c_amortized(uint32_t noAcc, bool values) {
     return (c_init(values) / noAcc) + c_acc(b);
 }
 
@@ -78,8 +78,23 @@ outType& LinearScan::c_acc(uint64_t b) {
  * @param values: true if the values are in place during initialization
  * @return amortized costs per access
  */
-outType& LinearScan::c_amortized(uint16_t noAcc, bool values) {
+outType& LinearScan::c_amortized(uint32_t noAcc, bool values) {
     return (c_init(values) / noAcc) + c_acc(b);
+}
+
+/**
+ * ReadAndRemove: reads and removes element with the given id from the ORAM
+ * @param m: number of elements to scan
+ * @param b: number of bit to read during RAR (always includes payload and isDummy)
+ * @return costs for RAR using b-bit
+ */
+outType& LinearScan::c_RAR(uint64_t m, uint64_t b) {
+    if(useOldFormula)
+        // m*(2*compEq(b2)+AND+OR+mux(b))
+        return c_yaoShare(1, bb) + m * (2*c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b));
+
+    // m*(compEq(b2)+AND+OR+mux(b))
+    return c_yaoShare(1, bb) + m*(c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b));
 }
 
 /**
@@ -88,12 +103,7 @@ outType& LinearScan::c_amortized(uint16_t noAcc, bool values) {
  * @return costs for RAR using b-bit
  */
 outType& LinearScan::c_RAR(uint64_t b) {
-    if(useOldFormula)
-        // m*(2*compEq(b2)+AND+OR+mux(b))
-        return c_yaoShare(1, bb) + m * (2*c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b));
-
-    // m*(compEq(b2)+AND+OR+mux(b))
-    return c_yaoShare(1, bb) + m*(c_comp_eq(b2) + 2*c_lin_gate() + c_mux(b));
+    return c_RAR(m, b);
 }
 
 /**
@@ -110,12 +120,20 @@ outType& LinearScan::c_cRAR(uint64_t b, outType& (*cond)()) {
  * Add: writes whole bb bit element to the first empty slot
  * @return costs for adding one element
  */
-outType& LinearScan::c_add() {
+outType& LinearScan::c_add(uint64_t m) {
     if(useOldFormula)
         // (m-1)(AND+OR)+m*(compEq(b2)+mux(bb))
         return (m-1)*2*c_lin_gate() + m*(c_comp_eq(b2) + c_mux(bb));
     // B2Y(m, bb) + (m-1)(AND+OR)+m*mux(bb) + Y2B(m, bb)
     return (m-1)*2*c_lin_gate() + m*c_mux(bb);
+}
+
+/**
+ * Add: writes whole bb bit element to the first empty slot
+ * @return costs for adding one element
+ */
+outType& LinearScan::c_add() {
+    return c_add(m);
 }
 
 /**
@@ -175,13 +193,36 @@ outType& LinearScanOram::c_acc(uint64_t b) {
     return c_B2Y(m, b+b2) + LinearScan::c_acc(b) + c_Y2B(m, b+b2);
 }
 
+outType& LinearScanOram::c_Read() {
+    return c_B2Y(m, bb) + TrivialLinearScan::c_read(m, bb) + c_Y2B(m, bb);
+}
+
+/**
+ * ReadAndRemove: reads and removes element with the given id from the ORAM
+ * @param m: number of elements to scan
+ * @param b: number of bit to read during RAR (always includes payload and isDummy)
+ * @return costs for RAR using b-bit
+ */
+outType& LinearScanOram::c_RAR(uint64_t m, uint64_t b) {
+    return c_B2Y(m, b+b2) + LinearScan::c_RAR(m, b) + c_Y2B(m, b+b2);
+}
+
 /**
  * ReadAndRemove: reads and removes element with the given id from the ORAM
  * @param b: number of bit to read during RAR (always includes payload and isDummy)
  * @return costs for RAR using b-bit
  */
 outType& LinearScanOram::c_RAR(uint64_t b) {
-    return c_B2Y(m, b+b2) + LinearScan::c_RAR(b) + c_Y2B(m, b+b2);
+    return c_RAR(m, b);
+}
+
+/**
+ * Add: writes whole bb bit element to the first empty slot
+ * @param m: number of elements to scan
+ * @return costs for adding one element
+ */
+outType& LinearScanOram::c_add(uint64_t m) {
+    return c_B2Y(m, bb) + LinearScan::c_add(m) + c_Y2B(m, bb);
 }
 
 /**
@@ -189,7 +230,7 @@ outType& LinearScanOram::c_RAR(uint64_t b) {
  * @return costs for adding one element
  */
 outType& LinearScanOram::c_add() {
-    return c_B2Y(m, bb) + LinearScan::c_add() + c_Y2B(m, bb);
+    return c_add(m);
 }
 
 /**

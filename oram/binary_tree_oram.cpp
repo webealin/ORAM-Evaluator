@@ -56,7 +56,12 @@ outType& TreeInterface::c_init(bool values) {
  */
 outType& TreeInterface::c_evict() {
     // sum(2 to d-1: 2*rand(i))+(2*d-3)(pop_BO(B, bb)+dChild(bb)+2*add_BO(B, bb))
-    return (2*d-3)*(buckets->c_pop()+c_condSwap(bb)+2*buckets->c_add());        // TODO summe (wegen dem rand)
+    outType& out = (2*d-3)*(buckets->c_pop()+c_condSwap(bb)+2*buckets->c_add());
+
+    for(uint16_t i = 2; i <= d-1; i++)
+        out += 2*c_rand(i);
+
+    return out;
 }
 
 outType& c_dIdx(uint16_t b) {
@@ -95,7 +100,9 @@ outType& c_dPath(uint16_t b) {
  */
 outType& TreeInterface::c_RAR(uint64_t b) {
     //LUMU(m, b)+rand(d)+dPath+d*RAR_BO(B, b+1, d)
-    return addWR(c_LUMU(), addWR(c_dPath(d), c_rand(d) + d*buckets->c_RAR(b+1)));
+    outType& out = addWR(c_LUMU(), addWR(c_dPath(d), c_rand(d) + d*buckets->c_RAR(b+1))) - c_yaoShare(
+            static_cast<uint64_t>(d - 1), bb);
+    return (typeid(*map) == typeid(TrivialLinearScan))? out+c_yaoShare(1, d) : out;
 }
 
 /**
@@ -105,8 +112,8 @@ outType& TreeInterface::c_RAR(uint64_t b) {
  */
 outType& BinaryTreeGKK::c_RAR(uint64_t b) {
     //LUMU(m, b)+rand(d)+dPath+d*RAR_BO(B, b+d, d)
-    outType& out = addWR(c_LUMU(), addWR(c_dPath(d), d*buckets->c_RAR(b+d)));
-    return (typeid(*map) == typeid(TrivialLinearScan))? out+c_yaoShare(1, d) : out;
+    outType& out = addWR(c_LUMU(), addWR(c_dPath(d), c_rand(d) + d*buckets->c_RAR(b+d))) - c_yaoShare(static_cast<uint64_t>(d - 1), bb);
+    return (typeid(*map) == typeid(TrivialLinearScan))? out+c_yaoShare(1, d) : out;     // new leaf identifier has to be shared
 }
 
 /**
@@ -134,7 +141,7 @@ outType& TreeInterface::c_acc(uint64_t b) {
  * @param values: true if the values are in place during initialization
  * @return amortized costs per access
  */
-outType& TreeInterface::c_amortized(uint16_t noAcc, bool values) {
+outType& TreeInterface::c_amortized(uint32_t noAcc, bool values) {
     // init(m, b) / a + acc(m, b)
     return c_init(values)/noAcc + c_acc(b);
 }

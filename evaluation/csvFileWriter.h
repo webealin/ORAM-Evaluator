@@ -16,20 +16,21 @@ private:
     std::string outGates;
     std::string outTraffic;
     std::string outRounds;
+    std::string outTime;
     std::string filename;
 public:
-    explicit CSVFileWriter(std::string filename) : filename(std::move(filename)) {
-        outGates += "d, Linear Scan Read, Linear Scan Write, Binary Tree ORAM, Path ORAM, Path-SC, SCORAM, Circuit ORAM, Optimized SQR ORAM";
-        outTraffic += "d, Linear Scan Read, Linear Scan Write, Binary Tree ORAM, Path ORAM, Path-SC, SCORAM, Circuit ORAM, Optimized SQR ORAM";
-        outRounds += "d, Linear Scan Read, Linear Scan Write, Binary Tree ORAM, Path ORAM, Path-SC, SCORAM, Circuit ORAM, Optimized SQR ORAM";
-    }
+    explicit CSVFileWriter(std::string filename) : filename(std::move(filename)) { }
     void addLine(uint16_t lineX);
-    void addOutType(outType* out);
+    void addHeader(std::string header);
     void addOutType(outType out);
+    void addOutType(Evaluator::btSettings minSettings);
+    void addOutType(Evaluator::pathSettings minSettings);
+    void addOutType(Evaluator::sqrSettings minSettings);
     void writeFiles();
     void writeGates();
     void writeTraffic();
     void writeRounds();
+    void writeTime();
 };
 
 #endif //ORAMEVALUATOR_FILEWRITER_H

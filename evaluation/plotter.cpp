@@ -4,22 +4,56 @@
 
 #include "plotter.h"
 
-void Plotter::plot_Elements(evalParam dParam, uint64_t b) {
-    CSVFileWriter* writer = new CSVFileWriter("test");
+void Plotter::plot(uint32_t noAcc, bool values, uint16_t d, uint64_t b, CSVFileWriter* writer, funcTypes func) {
+    writer->addLine(d);
+    auto m = (uint64_t) pow(2, d);
+
+    writer->addOutType(find_LinearScan(noAcc, 0, m, b));
+    writer->addOutType(find_LinearScan(0, noAcc, m, b));
+    writer->addOutType(find_best_BT(noAcc, values, m, b, StandardBTB(d), func.btF));
+    writer->addOutType(find_best_Path(noAcc, values, m, b, StandardPathB(d), StandardPathS(), func.pathF));
+    writer->addOutType(find_best_Path(noAcc, values, m, b, StandardPathSCB(d), StandardPathS(), func.pathSCF));
+    writer->addOutType(find_best_Path(noAcc, values, m, b, StandardScoramB(d), StandardScoramS(d), func.SCORAMF));
+    writer->addOutType(find_best_Path(noAcc, values, m, b, StandardPathB(d), StandardPathS(), func.CORAMF));
+    writer->addOutType(find_best_OSQR(noAcc, values, m, b, func.OSQRF));
+    std::cout << "Plotted d = " << d << std::endl;
+}
+
+void Plotter::plot_acc_elements(uint32_t noAcc, evalParam dParam, uint64_t b, const std::string& filename) {
+    CSVFileWriter* writer = new CSVFileWriter(filename);
+    writer->addHeader("d, Linear Scan Read, Linear Scan Write, Binary Tree ORAM, Path ORAM, Path-SC, SCORAM, Circuit ORAM, Optimized SQR ORAM");
     clock_t start = clock();
 
-    for(uint16_t d = dParam.min; d <= dParam.max; d = d*dParam.step_m + dParam.step_p) {
-        std::cout << "Plotted d = " << d << std::endl;
-        writer->addLine(d);
-        auto m = (uint64_t) pow(2, d);
+    for(uint16_t d = dParam.min; d <= dParam.max; d = d*dParam.step_m + dParam.step_p)
+        plot(noAcc, false, d, b, writer, acc_slow_func);                // TODO: umstellen auf fast
 
-        //writer->addOutType(find_LinearScan(1, 0, m, b));
-        //writer->addOutType(find_LinearScan(0, 1, m, b));
-        writer->addOutType(find_best_BT(1, m, b, evalParam{d, static_cast<uint16_t>(10*d), 1, d}, acc_BT_fast).out);
-        writer->addOutType(find_best_Path(1, m, b, evalParam{4, d, 1, 2}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_Path_fast).bt->out);
-        writer->addOutType(find_best_Path(1, m, b, evalParam{4, d, 2, 0}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_PathSC_fast).bt->out);
-        writer->addOutType(find_best_Path(1, m, b, evalParam{6, d, 1, 2}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_SCORAM_fast).bt->out);
-        writer->addOutType(find_best_Path(1, m, b, evalParam{4, d, 1, 2}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_CORAM_fast).bt->out);
+    writer->writeFiles();
+    delete writer;
+    float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
+    std::cout << "Plotted all - time needed: " << elapsed << std::endl;
+}
+
+void Plotter::plot_elements(uint32_t noAcc, bool values, evalParam dParam, uint64_t b, const std::string& filename) {
+    CSVFileWriter* writer = new CSVFileWriter(filename);
+    writer->addHeader("d, Linear Scan Read, Linear Scan Write, Binary Tree ORAM, Path ORAM, Path-SC, SCORAM, Circuit ORAM, Optimized SQR ORAM");
+    clock_t start = clock();
+
+    for(uint16_t d = dParam.min; d <= dParam.max; d = d*dParam.step_m + dParam.step_p)
+        plot(noAcc, values, d, b, writer, slow_func);                // TODO: umstellen auf fast
+
+    writer->writeFiles();
+    delete writer;
+    float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
+    std::cout << "Plotted all - time needed: " << elapsed << std::endl;
+}
+
+void Plotter::plot_acc_bitwidth(uint32_t noAcc, uint64_t m, evalParam bParam, const std::string& filename) {
+    CSVFileWriter* writer = new CSVFileWriter(filename);
+    writer->addHeader("b, Linear Scan Read, Linear Scan Write, Binary Tree ORAM, Path ORAM, Path-SC, SCORAM, Circuit ORAM, Optimized SQR ORAM");
+    clock_t start = clock();
+    for(uint64_t b = bParam.min; b <= bParam.max; b = b*bParam.step_m + bParam.step_p) {
+        uint16_t d = myLog2(m);
+        plot(noAcc, false, d, b, writer, acc_slow_func);                // TODO: umstellen auf fast
     }
     writer->writeFiles();
     delete writer;
@@ -27,21 +61,32 @@ void Plotter::plot_Elements(evalParam dParam, uint64_t b) {
     std::cout << "Plotted all - time needed: " << elapsed << std::endl;
 }
 
-void Plotter::plot_Bitwidth(uint64_t m, evalParam bParam) {
-    CSVFileWriter* writer = new CSVFileWriter("test");
+
+void Plotter::plot_bitwidth(uint32_t noAcc, bool values, uint64_t m, evalParam bParam, const std::string& filename) {
+    CSVFileWriter* writer = new CSVFileWriter(filename);
+    writer->addHeader("b, Linear Scan Read, Linear Scan Write, Binary Tree ORAM, Path ORAM, Path-SC, SCORAM, Circuit ORAM, Optimized SQR ORAM");
     clock_t start = clock();
     for(uint64_t b = bParam.min; b <= bParam.max; b = b*bParam.step_m + bParam.step_p) {
         uint16_t d = myLog2(m);
-        writer->addLine(d);
-
-        writer->addOutType(find_LinearScan(1, 0, m, b));
-        writer->addOutType(find_LinearScan(0, 1, m, b));
-        writer->addOutType(find_best_BT(1, m, b, evalParam{d, (uint16_t) (10*d), 1, d}, acc_BT_fast).out);
-        writer->addOutType(find_best_Path(1, m, b, evalParam{4, d, 1, 2}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_Path_fast).bt->out);
-        writer->addOutType(find_best_Path(1, m, b, evalParam{4, d, 2, 0}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_PathSC_fast).bt->out);
-        writer->addOutType(find_best_Path(1, m, b, evalParam{6, d, 1, 2}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_SCORAM_fast).bt->out);
-        writer->addOutType(find_best_Path(1, m, b, evalParam{4, d, 1, 2}, evalParam{d, static_cast<uint16_t>(5*d), 1, 1}, acc_CORAM_fast).bt->out);
+        plot(noAcc, values, d, b, writer, slow_func);                // TODO: umstellen auf fast
     }
+    writer->writeFiles();
+    delete writer;
+    float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
+    std::cout << "Plotted all - time needed: " << elapsed << std::endl;
+}
+
+
+void Plotter::plot_breakeven_points(evalParam dParam, evalParam bParam, const std::string& filename) {
+    CSVFileWriter* writer = new CSVFileWriter(filename);
+    clock_t start = clock();
+
+    std::cout << "Plotter::plot_breakeven_points: not implemented yet!" << std::endl;
+    /*for(uint16_t d = dParam.min; d <= dParam.max; d = d*dParam.step_m + dParam.step_p) {
+        for(uint16_t b = bParam.min; b <= bParam.max; b = b*bParam.step_m + bParam.step_p) {
+            // TODO
+        }
+    }*/
     writer->writeFiles();
     delete writer;
     float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;

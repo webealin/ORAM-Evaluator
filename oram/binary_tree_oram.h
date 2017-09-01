@@ -15,14 +15,14 @@
  */
 class TreeInterface : public extendedORAM {
 protected:
-    uint16_t B;                 // size of buckets
-    uint16_t d;                 // depth of tree
-    uint16_t c;                 // packing factor
+    uint16_t B;                   // size of buckets
+    uint16_t d;                   // depth of tree
+    uint16_t c;                   // packing factor
     ORAM* map{};                  // ORAM that stores map
-    LinearScanOram* buckets{};    // placeholder ORAM for buckets TODO: Interface für BucketORAM anlegen
+    LinearScanOram* buckets{};    // placeholder ORAM for buckets
 public:
     TreeInterface(uint64_t m, uint64_t b, uint16_t d, uint64_t bb, uint16_t B, uint16_t c, const std::string &type) :
-            extendedORAM(m, b, bb, type), c(c), B(B), d(d) { }
+            extendedORAM(m, b, bb, type), B(B), d(d), c(c) { }
     virtual void build();
     virtual void build(uint16_t counter);
 
@@ -43,7 +43,7 @@ public:
 
     outType& c_init(bool values) override;
     outType& c_acc(uint64_t b) override;
-    outType& c_amortized(uint16_t noAcc, bool values) override;
+    outType& c_amortized(uint32_t noAcc, bool values) override;
 
     outType& c_RAR(uint64_t b) override;
     outType& c_add() override;

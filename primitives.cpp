@@ -1,5 +1,5 @@
 //
-// library of building blocks that contains count of linear gates
+// library of building blocks that contains t of linear gates
 // and number of bits to transfer [byte] / rounds of interactions
 // values are calculated depending on entry in settings file
 // Created by weber on 30.06.2017.
@@ -37,7 +37,7 @@ outType& c_Y2B(uint64_t m, uint64_t b) {
  */
 outType& c_B2Y(uint64_t m, uint64_t b) {
     auto* out = new outType;
-    *out = {0, m*256*b, 2};
+    *out = {0, 256*m*b, 2};
     return *out;
 }
 
@@ -107,7 +107,7 @@ outType& c_mux_chain(uint64_t m, uint64_t b) {
  * @return costs (gates, traffic, rounds) of addition
  */
 outType& c_adder(uint64_t b) {
-    assert(b > 1);
+    assert(b != 0);
     auto* out = new outType;
     *out = {(b-1), 256*(b-1), 0};
     return *out;
@@ -220,9 +220,13 @@ outType& c_sort(uint64_t m, uint64_t b, uint16_t b2) {
  */
 outType& c_shuffle(uint64_t m, uint64_t b) {
     // condSwap(b) * (m * log2(m) - m + 1)
-    return (m * myLog2(m) - m + 1)*c_condSwap(b);
+    uint64_t elements = (m * myLog2(m) - m + 1);
+    auto* out = new outType;
+    out->gates = 2*b*elements + 2*myLog2(m)*elements;
+    out->traffic = 256*4*elements;
+    out->rounds = 2;
+    return *out;
 }
-// TODO: hier fehlt irgendwas wegen der inputs. steht im Revisiting Paper
 
 /**
  * costs for comparing each element to its neighbours to determine duplicates

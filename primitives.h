@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cassert>
 #include "settings.h"
+#include "types/outType.h"
 
 outType& c_lin_gate();
 

@@ -5,9 +5,14 @@
 #ifndef ORAMEVALUATOR_EVALUATOR_H
 #define ORAMEVALUATOR_EVALUATOR_H
 
-#include "../oram/tree_factory.h"
+#include "../oram/oram_factory.h"
 #include <ctime>
 #include "../fast_calculator.h"
+#include "../oram/optimized_square_root.h"
+#include "../types/outType.h"
+#include "../types/evalParam.h"
+#include "../settings.h"
+#include "access_functions.h"
 
 class Evaluator {
 public:
@@ -16,6 +21,8 @@ public:
         uint16_t c;
         uint16_t count;
         outType* out;
+        btSettings() : B(UINT16_MAX), c(UINT16_MAX), count(UINT16_MAX), out(new outType) { }
+        btSettings(uint16_t B, uint16_t c, uint16_t count, outType* out) : B(B), c(c), count(count), out(out) { }
     };
 
     struct pathSettings {
@@ -23,87 +30,53 @@ public:
         btSettings* bt;
     };
 
-    struct evalParam {
-        uint16_t min;
-        uint16_t max;
-        uint16_t step_m;
-        uint16_t step_p;
+    struct sqrSettings {
+        uint16_t c;
+        uint16_t count;
+        outType* out;
     };
 
-protected:
+    typedef outType& (*btFunc)(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count);
+    typedef outType& (*pathFunc)(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count);
+    typedef outType& (*sqrFunc)(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t c, uint16_t count);
+
+    struct funcTypes {
+        btFunc btF;
+        pathFunc pathF;
+        pathFunc pathSCF;
+        pathFunc SCORAMF;
+        pathFunc CORAMF;
+        sqrFunc OSQRF;
+    };
+
+    funcTypes acc_slow_func {acc_BT_slow, acc_Path_slow, acc_PathSC_slow, acc_SCORAM_slow, acc_CORAM_slow, acc_OSQR_slow};
+    funcTypes slow_func {BT_slow, Path_slow, PathSC_slow, SCORAM_slow, CORAM_slow, OSQR_slow};
+    funcTypes acc_fast_func {acc_BT_fast, acc_Path_fast, acc_PathSC_fast, acc_SCORAM_fast, acc_CORAM_fast, acc_OSQR_fast};
+    funcTypes fast_func {BT_fast, Path_fast, PathSC_fast, SCORAM_fast, CORAM_fast, OSQR_fast};
+
     outType find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
+
+    btSettings find_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam, btFunc acc);
+    void find_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, btSettings &minSettings, btFunc acc);
+    void find_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, btSettings &minSettings, btFunc acc);
+
+    pathSettings find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam, evalParam sParam, pathFunc acc);
+    pathSettings find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t stash, pathSettings& minSettings, pathFunc acc);
+
+    sqrSettings find_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc);
+
+    void evaluate_acc_exact(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
+    void evaluate_acc_exact_fast(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
+    void evaluate_exact(uint32_t noRead, uint32_t noWrite, bool values, uint64_t m, uint64_t b);
+    void evaluate_exact_fast(uint32_t noRead, uint32_t noWrite, bool values, uint64_t m, uint64_t b);
+
+private:
     void print_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
+    void print_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam, btFunc acc);
+    void print_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam, pathFunc acc);
+    void print_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc);
 
-    outType find_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b);
-    void print_LinearScanORAM(uint32_t noAcc, uint64_t m, uint64_t b);
-
-    Evaluator::btSettings find_best_BT(uint32_t noAcc, uint64_t m, uint64_t b, evalParam bParam,
-            outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t count));
-    void print_best_BT_fast(uint32_t noAcc, uint64_t m, uint64_t b, evalParam bParam);
-    void print_best_BT_slow(uint32_t noAcc, uint64_t m, uint64_t b, evalParam bParam);
-
-    Evaluator::pathSettings find_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, evalParam bParam, evalParam sParam,
-                                   outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t stash, uint16_t count));
-    void print_best_Path(uint32_t noAcc, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
-                              outType& (*acc)(uint64_t newM, uint64_t newB, uint16_t B, uint16_t c, uint16_t stash, uint16_t count));
-public:
-    void evaluate_exact(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
-    void evaluate_exact_fast(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
+    void evaluate(uint32_t noRead, uint32_t noWrite, bool values, uint64_t m, uint64_t b, uint16_t d, funcTypes func);
 };
-
-inline outType& acc_BT_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
-    BinaryTree* oram = TreeFactory::create_BT(m, b, B, c, count);
-    outType& out = oram->c_acc(b);
-    delete oram;
-    return out;
-}
-
-inline outType& acc_BT_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
-    return c_acc_BT(m, b, B, count, c);
-}
-
-inline outType& acc_Path_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    Path* path = TreeFactory::create_Path("Path", m, b, B, c, stash, count);
-    outType& out = path->c_acc(b);
-    delete path;
-    return out;
-}
-
-inline outType& acc_Path_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_Path(m, b, B, count, stash, c);
-}
-
-inline outType& acc_PathSC_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    PathSC* path = (PathSC*) TreeFactory::create_Path("PathSC", m, b, B, c, stash, count);
-    outType& out = path->c_acc(b);
-    delete path;
-    return out;
-}
-
-inline outType& acc_PathSC_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_PSC(m, b, B, count, stash, c);
-}
-
-inline outType& acc_SCORAM_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    Scoram* path = (Scoram*) TreeFactory::create_Path("Scoram", m, b, B, c, stash, count);
-    outType& out = path->c_acc(b);
-    delete path;
-    return out;
-}
-
-inline outType& acc_SCORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_SCORAM(m, b, B, count, stash, c);
-}
-
-inline outType& acc_CORAM_slow(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    Coram* path = (Coram*) TreeFactory::create_Path("CORAM", m, b, B, c, stash, count);
-    outType& out = path->c_acc(b);
-    delete path;
-    return out;
-}
-
-inline outType& acc_CORAM_fast(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
-    return c_acc_CORAM(m, b, B, count, stash, c);
-}
 
 #endif //ORAMEVALUATOR_EVALUATOR_H

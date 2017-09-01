@@ -27,7 +27,7 @@ public:
     void build(uint16_t counter) override;
     void build() override;
 
-    Path* createMap(uint64_t newM) override;
+    ORAM* createMap(uint64_t newM) override;
     inline bool recursionCond(uint16_t counter) override {
         return counter > 0 && m > 8*c;          // d = log(m)-1 and log(d) is used
     }
@@ -57,9 +57,14 @@ public:
 };
 
 class Scoram : public Path {
+protected:
+    uint8_t alpha;
 public:
-    Scoram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "SCORAM") {}
+    Scoram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, uint8_t alpha) : Path(m, b, B, c, s, "SCORAM"), alpha(alpha) {}
     Scoram* createMap(uint64_t newM) override;
+
+    outType& c_acc(uint64_t b) override;
+    outType& c_RAR(uint64_t b) override;
     outType& c_addAndEvict() override;
 
     outType& c_cPut();
@@ -71,9 +76,10 @@ public:
 class Coram : public Path {
 public:
     Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "Circuit ORAM") {}
+    Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, const std::string& type) : Path(m, b, B, c, s, type) {}
     void build() override;
 
-    Coram* createMap(uint64_t newM) override;
+    ORAM* createMap(uint64_t newM) override;
     outType& c_addAndEvict() override;
 
     outType& c_minLCA(uint64_t m, uint64_t b);
@@ -83,6 +89,27 @@ public:
     outType& c_PT();
     outType& c_evictOnceW();
     outType& c_evictOnce();
+};
+
+// only used for verification of SQR paper
+class SQR_CORAM: public Coram {
+public:
+    SQR_CORAM(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Coram(m, b, B, c, s, "SQR_CORAM") {}
+
+    inline bool recursionCond(uint16_t counter) override {
+        return counter > 0 && m > pow(2, 8);
+    }
+};
+
+class MixedORAM : public Coram {
+protected:
+    uint32_t noAcc;
+    bool values;
+public:
+    MixedORAM(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) :
+            Coram(m, b, B, c, s, "Mixed ORAM"), noAcc(noAcc), values(values) { }
+
+    ORAM* createMap(uint64_t newM) override;
 };
 
 #endif //ORAMEVALUATOR_PATH_ORAM_H

@@ -6,7 +6,7 @@
 
 void Path::build(uint16_t counter) {
     TreeInterface::build(counter);
-    stash = new LinearScanOram(s, b+d+1, (uint16_t)(d+1), false);
+    stash = new LinearScan(s, b+d+1, (uint16_t)(d+1), false);
 }
 
 void Path::build() {
@@ -25,12 +25,10 @@ LinearScanOram* Path::createBuckets() {
 /**
  * initialization of path-based ORAM (additional initialization of stash)
  * @param values: true if the values are in place during initialization
- * @return costs for initialization of tree-based ORAM
+ * @return costs for initialization of path-based ORAM
  */
 outType& Path::c_init(bool values) {
-    outType& iBucket = ((uint64_t) pow(2, d+1)-1)*map->c_init(values); // TODO: stash! init
-    outType& iMap = m*c_rand(d) + map->c_init(values);
-    return iBucket + iMap + m*c_acc(b);
+    return TreeInterface::c_init(values) + stash->c_init(false);
 }
 
 /**
@@ -38,7 +36,7 @@ outType& Path::c_init(bool values) {
  * @param newM: number of elements to store in map
  * @return new constructed Path ORAM map
  */
-Path* Path::createMap(uint64_t newM) {
+ORAM* Path::createMap(uint64_t newM) {
     return new Path(newM, c*d, B, c, s);
 }
 
@@ -59,7 +57,7 @@ outType& Path::c_LCA(uint64_t b) {
  */
 outType& Path::c_acc(uint64_t b) {
     //RAR(m, b)+a&e(m, b)
-    return c_RAR(b)+c_addAndEvict();
+    return c_RAR(b) + c_addAndEvict();
 }
 
 /**
@@ -69,18 +67,16 @@ outType& Path::c_acc(uint64_t b) {
  */
 outType& Path::c_RAR(uint64_t b) {
     // LUMU(m, b)+rand(d)+dPath+d*(RAR_BO(B, b+1, d) - Y2B(B, b+d+1))
-    outType& ret = TreeInterface::c_RAR(b);
-    return ret - d*(c_Y2B(B, b+d+1));
+    return TreeInterface::c_RAR(b) - d*(c_Y2B(B, b+d+1)) - c_yaoShare(1, bb) + stash->c_RAR(b);
 }
-// TODO: auch bei anderen Path Versionen??
 
 /**
  * Eviction of naive Path ORAM
  * @return costs for eviction
  */
 outType& Path::c_addAndEvict() {
-    // B2Y(s, bb) + B2Y(Bd, d) + (Bd+s)*(LCA(d) + MuxChain(Bd+s, bb) + d(B + compMag(log2(d))) + Y2B(Bd + s, bb)
-    outType& gates = (B*d+s)*(c_LCA(d)+c_mux_chain(B*d+s, bb)+d*(B*c_lin_gate() + c_comp_mag(myLog2(d))));
+    // B2Y(s, bb) + B2Y(Bd, d) + (Bd+s)*(LCA(d) + MuxChain(Bd+s, bb) + d(3B + compMag(log2(d))) + Y2B(Bd + s, bb)
+    outType& gates = (B*d+s)*(c_LCA(d)+c_mux_chain(B*d+s, bb)+d*(B*3*c_lin_gate() + c_comp_mag(myLog2(d)))-2*c_lin_gate());
     return c_B2Y(s, bb) + c_B2Y(B*d, d) + gates + c_Y2B(B*d+s, bb);
 }
 
@@ -156,7 +152,27 @@ outType& PathSC::c_addAndEvict() {
  * @return new constructed Path ORAM map
  */
 Scoram* Scoram::createMap(uint64_t newM) {
-    return new Scoram(newM, c*d, B, c, s);
+    return new Scoram(newM, c*d, B, c, s, alpha);
+}
+
+/**
+ * reads b-bit from one of the elements in the array
+ * @param b: number of bit to read, only payload here
+ * @return costs for accessing b-bit
+ */
+outType& Scoram::c_acc(uint64_t b) {
+    //RAR(m, b)+a&e(m, b)
+    return addWR(c_RAR(b), c_addAndEvict());
+}
+
+/**
+ * ReadAndRemove: reads and removes element with the given id from the ORAM
+ * @param b: number of bit to read during RAR (always includes payload and isDummy)
+ * @return costs for RAR using b-bit
+ */
+outType& Scoram::c_RAR(uint64_t b) {
+    // LUMU(m, b)+rand(d)+dPath+d*(RAR_BO(B, b+1, d) - Y2B(B, b+d+1))
+    return Path::c_RAR(b) + d*(c_Y2B(B, b+d+1));
 }
 
 /**
@@ -217,11 +233,11 @@ outType& Scoram::c_GPP() {
 
 /**
  * eviction of SCORAM, uses flush operation alpha times
- * @return costs for eviction of SCORAM TODO: alpha als parameter irgendwo einfügen, Bis irgendwie handlen
+ * @return costs for eviction of SCORAM
  */
 outType& Scoram::c_addAndEvict() {
     // alpha*(rand(d) + dPath + B2Y(Bd, bb) + RDP(m, b) + GPP(m, b) + Y2B(Bd, bb))
-    return 4*(c_rand(d) + c_B2Y(B*d, bb) + c_RDP() + c_GPP() + c_Y2B(B*d, bb));     // TODO: share conversions sind falsch...
+    return multiplyWR(alpha, (c_rand(d) + c_B2Y(B*d, bb) + c_RDP() + c_GPP() + c_Y2B(B*d, bb)));
 }
 
                         /********************************************/
@@ -238,7 +254,7 @@ void Coram::build() {
  * @param newM: number of elements to store in map
  * @return new constructed Circuit ORAM map
  */
-Coram* Coram::createMap(uint64_t newM) {
+ORAM* Coram::createMap(uint64_t newM) {
     return new Coram(newM, c*d, B, c, s);
 }
 
@@ -293,7 +309,7 @@ outType& Coram::c_PT() {
 }
 
 /**
- * eviction on single block TODO: kp ob das stimmt
+ * eviction on single block
  * @return costs for eviction on single block
  */
 outType& Coram::c_evictOnceW() {
@@ -316,4 +332,24 @@ outType& Coram::c_evictOnce() {
  */
 outType& Coram::c_addAndEvict() {
     return 2*(c_Y2B(B*d+s, bb) + c_PD() + c_PT() + c_evictOnce() + c_B2Y(B*d+s, bb));
+}
+
+ORAM *MixedORAM::createMap(uint64_t newM) {
+    /*auto* eval = new Evaluator();
+
+    // buckets and stash of same size!
+    auto coramOut = new Evaluator::pathSettings;
+    eval->find_best_Path(noAcc, values, newM, c*d, B, s, *coramOut, acc_CORAM_slow);
+    double_t coramTime = needsTime(*coramOut->bt->out);
+    uint16_t coramC = coramOut->bt->c;
+    delete &coramOut;
+
+    auto sqrOut = eval->find_best_OSQR(noAcc, values, newM, c*d, acc_OSQR_slow);
+    double_t sqrTime = needsTime(*sqrOut.out);
+    delete &sqrOut;
+
+    if(coramTime < sqrTime)*/
+        return new Coram(newM, c*d, B, 4/*coramC*/, s);
+
+    //else return new OSquareRoot(newM, c*d, c);
 }
