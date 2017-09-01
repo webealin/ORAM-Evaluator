@@ -181,7 +181,7 @@ outType& LinearScanOram::c_init(bool values) {
     if(values)
         return c_Y2B(m, bb);
     // else establish Boolean sharing
-    return c_booleanShare(m, bb);
+    return c_booleanShare(m, 1);        // only isDummy bit is shared, rest is set locally!
 }
 
 /**
