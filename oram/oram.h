@@ -19,6 +19,7 @@ protected:
     uint64_t b;     // bit width of element to store (payload)
     uint64_t bb;    // block width (payload + metadata)
 public:
+    ORAM() { assert(0); }
     ORAM(uint64_t m, uint64_t b, uint64_t bb, const std::string& type) : type(type), m(m), b(b), bb(bb){}
     virtual ~ORAM() = default;
 
@@ -27,9 +28,9 @@ public:
     virtual outType& c_amortized(uint32_t noAcc, bool values) = 0;
 };
 
-class extendedORAM : public ORAM{
+class extendedORAM : virtual public ORAM {
 public:
-    extendedORAM(uint64_t m, uint64_t b, uint64_t bb, const std::string& type) : ORAM(m, b, bb, type) {}
+    extendedORAM() = default;
 
 private:
     virtual outType& c_add() = 0;

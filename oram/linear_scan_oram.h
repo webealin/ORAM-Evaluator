@@ -71,10 +71,8 @@ protected:
                                 // no isDummy bit -> additional equality comparator over b2 bit
     uint16_t b2;                // bit width of virtual id
 public:
-    LinearScan(uint64_t m, uint64_t b) : extendedORAM(m, b, b+myLog2(m), "Linear Scan"), useOldFormula(false), b2(myLog2(m)) { }
-    LinearScan(uint64_t m, uint64_t b, const std::string &type) : extendedORAM(m, b, b+myLog2(m), type), useOldFormula(false), b2(myLog2(m)) { }
-    LinearScan(uint64_t m, uint64_t b, uint16_t b2, bool oldFormula) : extendedORAM(m, b, b+b2, "Linear Scan"), useOldFormula(oldFormula), b2(b2) { }
-    LinearScan(uint64_t m, uint64_t b, uint16_t b2, bool oldFormula, const std::string &type) : extendedORAM(m, b, b+b2, type), useOldFormula(oldFormula), b2(b2) { }
+    LinearScan(uint64_t m, uint64_t b) : ORAM(m, b, b+myLog2(m), "Linear Scan"), extendedORAM(), useOldFormula(false), b2(myLog2(m)) { }
+    LinearScan(uint64_t m, uint64_t b, uint16_t b2, bool oldFormula) : ORAM(m, b, b+b2, "Linear Scan"), extendedORAM(), useOldFormula(oldFormula), b2(b2) { }
 
     outType& c_init(bool values) override;
     outType& c_acc(uint64_t b) override;
@@ -95,8 +93,8 @@ public:
 class LinearScanOram : public LinearScan {
 protected:
 public:
-    LinearScanOram(uint64_t m, uint64_t b) : LinearScan(m, b, "Linear Scan ORAM") {}
-    LinearScanOram(uint64_t m, uint64_t b, uint16_t b2, bool oldFormula) : LinearScan(m, b, b2, oldFormula, "Linear Scan ORAM"){ }
+    LinearScanOram(uint64_t m, uint64_t b) : ORAM(m, b, b+myLog2(m), "Linear Scan ORAM"), LinearScan(m, b) { }
+    LinearScanOram(uint64_t m, uint64_t b, uint16_t b2, bool oldFormula) : ORAM(m, b, b+b2, "Linear Scan"), LinearScan(m, b, b2, oldFormula){ }
 
     outType& c_init(bool values) override;
     outType& c_acc(uint64_t b) override;

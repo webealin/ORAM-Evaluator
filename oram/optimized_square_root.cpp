@@ -4,16 +4,6 @@
 
 #include "optimized_square_root.h"
 
-void OSquareRoot::build(uint16_t counter) {
-    auto newM = (uint64_t) ceil((double) m / c);
-
-    if(recursionCond(counter)) {
-        map = createMap(newM);
-        ((OSquareRoot*) map)->build((uint16_t) (counter-1));
-    }
-    else map = createLSMap(newM);
-}
-
 outType& OSquareRoot::c_init(bool values) {
     if(values)
         return c_permute();

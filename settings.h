@@ -9,7 +9,7 @@
 
 class Settings {
 public:
-    static constexpr double_t latency = 5;                                   // latency in ms
+    static constexpr double_t latency = 0;                                   // latency in ms
     static constexpr double_t bandwidth = ceil(1.03 * 1024);                 // bandwidth in MBit/s
     static constexpr double_t calc = 10000;                                  // calculation time in AND/ms
 

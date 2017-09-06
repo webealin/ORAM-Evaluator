@@ -7,25 +7,18 @@
 
 #include "oram.h"
 #include "linear_scan_oram.h"
+#include "map_based_oram.h"
 
-// TODO: schöner machen. Zu viel gleich wie bei BT
-class OSquareRoot : public ORAM {
+class OSquareRoot : public MapBasedORAM {
 protected:
-    uint16_t c;                     // packing factor
-    ORAM* map{};                    // ORAM that stores map
     uint16_t T;                     // period
     uint16_t t;                     // number accesses this period
 public:
-    OSquareRoot(uint64_t m, uint64_t b, uint16_t c) : ORAM(m, b, b + myLog2(m), "Optimized Square-Root"), c(c), T(
-            (uint16_t)(floor(sqrt(m * myLog2(m))))), t(0) { }
+    OSquareRoot(uint64_t m, uint64_t b, uint16_t c) : ORAM(m, b, b + myLog2(m), "Optimized Square-Root"), MapBasedORAM(c),
+                                                      T((uint16_t)(floor(sqrt(m * myLog2(m))))), t(0) { }
 
-    OSquareRoot(uint64_t m, uint64_t b, uint16_t c, uint16_t T) : ORAM(m, b, b + myLog2(m), "Optimized Square-Root"), c(c), T(T), t(0) { }
-
-    ~OSquareRoot() {
-        delete map;
-    }
-
-    void build(uint16_t counter);
+    OSquareRoot(uint64_t m, uint64_t b, uint16_t c, uint16_t T) : ORAM(m, b, b + myLog2(m), "Optimized Square-Root"),
+                                                                  MapBasedORAM(c), T(T), t(0) { }
 
     inline TrivialLinearScan* createLSMap(uint64_t newM) {
         return new SQR_TLS(newM, (uint64_t) (c * myLog2(m) + 1));

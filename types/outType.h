@@ -13,11 +13,11 @@
 #include "../helper.h"
 
 struct outType {
-    uint64_t gates;
-    uint64_t traffic;
-    uint64_t rounds;
+    uint64_t gates{UINT64_MAX};
+    uint64_t traffic{UINT64_MAX};
+    uint64_t rounds{UINT64_MAX};
 
-    outType() : gates(UINT64_MAX), traffic(UINT64_MAX), rounds(UINT64_MAX) { }
+    outType() = default;
     outType(uint64_t g, uint64_t t, uint64_t r) : gates(g), traffic(t), rounds(r) { }
 
     inline outType& operator+= (const outType& b) {
@@ -44,7 +44,7 @@ inline double_t needsTime(const outType& outType) {
     double_t out1 = rounds + traffic;
     double_t out = out1 + gates;
     if(out1 < rounds || out1 < traffic || out < out1 || out < gates)
-        out = MAXDOUBLE;
+        out = -1;
     return out;
 }
 

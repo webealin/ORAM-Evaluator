@@ -5,33 +5,11 @@
 #include <typeinfo>
 
 /**
- * construction of the structure using recursive trees until depth would be smaller 12 (GKK)
- */
-void TreeInterface::build() {
-    auto newM = (uint64_t) ceil((double) m / c);
-
-    if(d >= 12) {
-        map = createMap(newM);
-        ((TreeInterface*) map)->build();
-    }
-    else map = createLSMap(newM);
-
-    buckets = createBuckets();
-}
-
-/**
  * construction of the structure using counter steps before utilizing Linear Scan ORAM
  * @param counter
  */
 void TreeInterface::build(uint16_t counter) {
-    auto newM = (uint64_t) ceil((double) m / c);
-
-    if(recursionCond(counter)) {
-        map = createMap(newM);
-        ((TreeInterface*) map)->build((uint16_t) (counter-1));
-    }
-    else map = createLSMap(newM);
-
+    MapBasedORAM::build(counter);
     buckets = createBuckets();
 }
 
@@ -143,5 +121,5 @@ outType& TreeInterface::c_acc(uint64_t b) {
  */
 outType& TreeInterface::c_amortized(uint32_t noAcc, bool values) {
     // init(m, b) / a + acc(m, b)
-    return c_init(values)/noAcc + c_acc(b);
+    return addWR(divideWR(c_init(values), noAcc), c_acc(b));
 }

@@ -3,16 +3,13 @@
 //
 
 #include "path_oram.h"
+#include "../evaluation/evaluator.h"
 
 void Path::build(uint16_t counter) {
     TreeInterface::build(counter);
     stash = new LinearScan(s, b+d+1, (uint16_t)(d+1), false);
 }
 
-void Path::build() {
-    TreeInterface::build();
-    stash = new LinearScan(s, b+d+1, (uint16_t)(d+1), false);
-}
 
 /**
  * helper operation for constructing new Linear Scan ORAM buckets
@@ -244,8 +241,8 @@ outType& Scoram::c_addAndEvict() {
                         /**********      Circuit ORAM      **********/
                         /********************************************/
 
-void Coram::build() {
-    TreeInterface::build();
+void Coram::build(uint16_t counter) {
+    TreeInterface::build(counter);
     stash = new LinearScanOram(s, b+d+1, (uint16_t)(d+1), false);
 }
 
@@ -256,6 +253,16 @@ void Coram::build() {
  */
 ORAM* Coram::createMap(uint64_t newM) {
     return new Coram(newM, c*d, B, c, s);
+}
+
+/**
+ * ReadAndRemove: reads and removes element with the given id from the ORAM
+ * @param b: number of bit to read during RAR (always includes payload and isDummy)
+ * @return costs for RAR using b-bit
+ */
+outType& Coram::c_RAR(uint64_t b) {
+    // LUMU(m, b)+rand(d)+dPath+d*(RAR_BO(B, b+1, d) - Y2B(B, b+d+1))
+    return Path::c_RAR(b) + d*(c_Y2B(B, b+d+1));
 }
 
 /**
@@ -335,21 +342,24 @@ outType& Coram::c_addAndEvict() {
 }
 
 ORAM *MixedORAM::createMap(uint64_t newM) {
-    /*auto* eval = new Evaluator();
+    auto* eval = new Evaluator();
 
     // buckets and stash of same size!
-    auto coramOut = new Evaluator::pathSettings;
-    eval->find_best_Path(noAcc, values, newM, c*d, B, s, *coramOut, acc_CORAM_slow);
-    double_t coramTime = needsTime(*coramOut->bt->out);
-    uint16_t coramC = coramOut->bt->c;
-    delete &coramOut;
+    Evaluator::pathSettings coramOut = {UINT16_MAX, new Evaluator::btSettings};
+    eval->find_best_Path(noAcc, values, newM, c*d, B, s, coramOut, Mixed_ORAM_slow);
+    double_t coramTime = needsTime(*coramOut.bt->out);
+    uint16_t coramC = coramOut.bt->c;
+    delete coramOut.bt->out;
+    delete coramOut.bt;
 
     auto sqrOut = eval->find_best_OSQR(noAcc, values, newM, c*d, acc_OSQR_slow);
     double_t sqrTime = needsTime(*sqrOut.out);
-    delete &sqrOut;
+    delete sqrOut.out;
 
-    if(coramTime < sqrTime)*/
-        return new Coram(newM, c*d, B, 4/*coramC*/, s);
-
-    //else return new OSquareRoot(newM, c*d, c);
+    if(coramTime < sqrTime) {
+        std::cout << "new mixed ORAM: m: " << newM << std::endl;
+        return new MixedORAM(noAcc, values, newM, c * d, B, coramC, s);
+    }
+    std::cout << "new OSQR ORAM: m: " << newM << std::endl;
+    return new OSquareRoot(newM, c*d, c);
 }

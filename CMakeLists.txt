@@ -16,5 +16,5 @@ set(SOURCE_FILES main.cpp
         evaluation/evaluator.cpp evaluation/evaluator.h
         evaluation/plotter.cpp evaluation/plotter.h
         evaluation/csvFileWriter.cpp evaluation/csvFileWriter.h
-        paper_benchmarks.cpp paper_benchmarks.h types/outType.h types/evalParam.h evaluation/access_functions.h)
+        paper_benchmarks.cpp paper_benchmarks.h types/outType.h types/evalParam.h evaluation/access_functions.h oram/map_based_oram.h)
 add_executable(ORAMEvaluator ${SOURCE_FILES})

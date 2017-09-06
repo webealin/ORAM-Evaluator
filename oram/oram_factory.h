@@ -108,7 +108,7 @@ public:
 
     static inline MixedORAM* create_Mixed_ORAM(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t counter) {
         MixedORAM* ret = new MixedORAM(noAcc, values, m, b, B, c, stash);
-        ret->build();
+        ret->build(counter);
         return ret;
     }
 

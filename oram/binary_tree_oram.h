@@ -9,36 +9,26 @@
 
 #include <utility>
 #include "linear_scan_oram.h"
+#include "map_based_oram.h"
 
 /**
  * interface for all tree-based constructions
  */
-class TreeInterface : public extendedORAM {
+class TreeInterface : public MapBasedORAM, public extendedORAM {
 protected:
     uint16_t B;                   // size of buckets
     uint16_t d;                   // depth of tree
-    uint16_t c;                   // packing factor
-    ORAM* map{};                  // ORAM that stores map
     LinearScanOram* buckets{};    // placeholder ORAM for buckets
 public:
-    TreeInterface(uint64_t m, uint64_t b, uint16_t d, uint64_t bb, uint16_t B, uint16_t c, const std::string &type) :
-            extendedORAM(m, b, bb, type), B(B), d(d), c(c) { }
-    virtual void build();
-    virtual void build(uint16_t counter);
+    TreeInterface(uint16_t d, uint16_t B, uint16_t c) : extendedORAM(), MapBasedORAM(c), B(B), d(d) { }
+    void build(uint16_t counter) override;
 
     ~TreeInterface() override {
-        delete map;
         delete buckets;
     }
-    virtual ORAM* createMap(uint64_t newM) = 0;
-    virtual bool recursionCond(uint16_t counter) = 0;   // TODO: umstellen. Vllt einfach zwei Arten Tree, eine mit counter und eine ohne?
 
     inline virtual LinearScanOram* createBuckets() {
         return new LinearScanOram(B, b+d+1, d, false);   // note that LSO sets bb to b+d (adds vid for itself)!
-    }
-
-    inline virtual TrivialLinearScan* createLSMap(uint64_t newM) {
-        return new TrivialLinearScan(newM, c*d);
     }
 
     outType& c_init(bool values) override;
@@ -59,10 +49,10 @@ class BinaryTree : public TreeInterface {
 private:
     bool dynamicBuckets;        // use dynamic bucket sizes in maps
 public:
-    BinaryTree(uint64_t m, uint64_t b, uint16_t B, uint16_t c, bool dynamicBuckets) :
-            TreeInterface(m, b, myLog2(m), b+2*myLog2(m)+1, B, c, "Binary Tree ORAM"), dynamicBuckets(dynamicBuckets) { }
-    BinaryTree(uint64_t m, uint64_t b, uint16_t B, uint16_t c) :
-            TreeInterface(m, b, myLog2(m), b+2*myLog2(m)+1, B, c, "Binary Tree ORAM"), dynamicBuckets(false) { }
+    BinaryTree(uint64_t m, uint64_t b, uint16_t B, uint16_t c, bool dBuckets) :
+            ORAM(m, b, b+2*myLog2(m)+1, "Binary Tree ORAM"), TreeInterface(myLog2(m), B, c), dynamicBuckets(dBuckets) { }
+    BinaryTree(uint64_t m, uint64_t b, uint16_t B, uint16_t c) : ORAM(m, b, b+2*myLog2(m)+1, "Binary Tree ORAM"),
+                                                                 TreeInterface(myLog2(m), B, c), dynamicBuckets(false) { }
 
     inline bool recursionCond(uint16_t counter) override {
         return counter > 0 && m > c;
@@ -80,14 +70,17 @@ public:
  */
 class BinaryTreeGKK : public TreeInterface {
 public:
-    BinaryTreeGKK(uint64_t m, uint64_t b, uint16_t c) :
-            TreeInterface(m, b, myLog2(m), b+2*myLog2(m), (uint16_t) 2*myLog2(m), c, "GKK Binary Tree ORAM") {}
+    BinaryTreeGKK(uint64_t m, uint64_t b, uint16_t c) : ORAM(m, b, b+2*myLog2(m), "GKK Binary Tree ORAM"),
+            TreeInterface(myLog2(m), (uint16_t) 2*myLog2(m), c) { }
 
     outType& c_RAR(uint64_t b) override;
     outType& c_LUMU() override;
+    inline void build() {
+        TreeInterface::build(UINT16_MAX);
+    }
 
     inline bool recursionCond(uint16_t counter) override {
-        return false;           // TODO remove
+        return d >= 12;
     }
 
     inline BinaryTreeGKK* createMap(uint64_t newM) override {

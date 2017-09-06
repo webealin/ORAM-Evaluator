@@ -15,19 +15,17 @@ protected:
     uint16_t s;
     LinearScan* stash{};
 public:
-    Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, const std::string& type) :
-            TreeInterface(m, b, (uint16_t) (myLog2(m)-1), b+2* myLog2(m), B, c, type), s(s) {}
-
-    Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) :
-            TreeInterface(m, b, (uint16_t) (myLog2(m)-1), b+2* myLog2(m), B, c, "Path ORAM"), s(s) {}
+    Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : ORAM(m, b, b+2*myLog2(m), "Path ORAM"),
+                                                                       TreeInterface((uint16_t) (myLog2(m)-1), B, c),
+                                                                       s(s) { }
 
     ~Path() override {
         delete stash;
     }
     void build(uint16_t counter) override;
-    void build() override;
 
     ORAM* createMap(uint64_t newM) override;
+
     inline bool recursionCond(uint16_t counter) override {
         return counter > 0 && m > 8*c;          // d = log(m)-1 and log(d) is used
     }
@@ -43,7 +41,8 @@ public:
 
 class PathSC : public Path {
 public:
-    PathSC(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "PathSC ORAM") {
+    PathSC(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : ORAM(m, b, b+2*myLog2(m), "PathSC ORAM"),
+                                                                         Path(m, b, B, c, s) {
         // B has to be power of two otherwise c_offset would need to include multiplier
         assert(isPowerOfTwo(B));
     }
@@ -60,7 +59,8 @@ class Scoram : public Path {
 protected:
     uint8_t alpha;
 public:
-    Scoram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, uint8_t alpha) : Path(m, b, B, c, s, "SCORAM"), alpha(alpha) {}
+    Scoram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, uint8_t alpha) : ORAM(m, b, b+2*myLog2(m), "SCORAM"),
+                                                                                        Path(m, b, B, c, s), alpha(alpha) { }
     Scoram* createMap(uint64_t newM) override;
 
     outType& c_acc(uint64_t b) override;
@@ -75,12 +75,14 @@ public:
 
 class Coram : public Path {
 public:
-    Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Path(m, b, B, c, s, "Circuit ORAM") {}
-    Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, const std::string& type) : Path(m, b, B, c, s, type) {}
-    void build() override;
+    Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : ORAM(m, b, b+2*myLog2(m), "Circuit ORAM"),
+                                                                        Path(m, b, B, c, s) { }
+    void build(uint16_t counter) override;
 
     ORAM* createMap(uint64_t newM) override;
     outType& c_addAndEvict() override;
+
+    outType& c_RAR(uint64_t b) override;
 
     outType& c_minLCA(uint64_t m, uint64_t b);
     outType& c_PDStash();
@@ -94,7 +96,8 @@ public:
 // only used for verification of SQR paper
 class SQR_CORAM: public Coram {
 public:
-    SQR_CORAM(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : Coram(m, b, B, c, s, "SQR_CORAM") {}
+    SQR_CORAM(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : ORAM(m, b, b+2*myLog2(m), "Circuit ORAM"),
+                                                                            Coram(m, b, B, c, s) {}
 
     inline bool recursionCond(uint16_t counter) override {
         return counter > 0 && m > pow(2, 8);
@@ -107,7 +110,7 @@ protected:
     bool values;
 public:
     MixedORAM(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) :
-            Coram(m, b, B, c, s, "Mixed ORAM"), noAcc(noAcc), values(values) { }
+            ORAM(m, b, b+2*myLog2(m), "Mixed ORAM"), Coram(m, b, B, c, s), noAcc(noAcc), values(values) { }
 
     ORAM* createMap(uint64_t newM) override;
 };
