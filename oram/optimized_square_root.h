@@ -15,23 +15,23 @@ protected:
     uint16_t t;                     // number accesses this period
 public:
     OSquareRoot(uint64_t m, uint64_t b, uint16_t c) : ORAM(m, b, b + myLog2(m), "Optimized Square-Root"), MapBasedORAM(c),
-                                                      T((uint16_t)(floor(sqrt(m * myLog2(m))))), t(0) { }
+                                                      T((uint16_t)(floor(sqrt(m * myLog2(m))))), t(0) {
+    }
 
     OSquareRoot(uint64_t m, uint64_t b, uint16_t c, uint16_t T) : ORAM(m, b, b + myLog2(m), "Optimized Square-Root"),
                                                                   MapBasedORAM(c), T(T), t(0) { }
 
-    inline TrivialLinearScan* createLSMap(uint64_t newM) {
+    inline TrivialLinearScan* createLSMap(uint64_t newM) override {
         return new SQR_TLS(newM, (uint64_t) (c * myLog2(m) + 1));
     }
 
-    inline OSquareRoot* createMap(uint64_t newM) {
+    inline OSquareRoot* createMap(uint64_t newM) override {
         return new OSquareRoot(newM, c*myLog2(m), c, T);
     }
 
-    inline bool recursionCond(uint16_t counter) {
-        return counter > 0 && m >= c*T;
+    inline bool recursionCond(uint16_t counter) override {
+        return counter > 0 && m >= c*T;     // TODO
     }
-
     outType& c_LUMU();
 
     outType& c_init(bool values) override;

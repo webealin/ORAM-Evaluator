@@ -37,9 +37,9 @@ struct outType {
 };
 
 inline double_t needsTime(const outType& outType) {
-    double_t rounds = Settings::latency * outType.rounds;                           // calculation is in ms
-    double_t traffic = outType.traffic / (1024*1024*Settings::bandwidth / 1000);
-    double_t gates = outType.gates / Settings::calc;
+    double_t rounds = Settings::get().getLatency() * outType.rounds;               // calculation is in ms
+    double_t traffic = outType.traffic / (1000*Settings::get().getBandwidth());    // Settings bandwidth is in Mbps, need bit/ms
+    double_t gates = outType.gates /  Settings::get().getCalc();
 
     double_t out1 = rounds + traffic;
     double_t out = out1 + gates;

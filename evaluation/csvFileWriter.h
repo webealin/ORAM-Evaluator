@@ -22,7 +22,9 @@ public:
     explicit CSVFileWriter(std::string filename) : filename(std::move(filename)) { }
     void addLine(uint16_t lineX);
     void addHeader(std::string header);
+    void addEmpty();
     void addOutType(outType out);
+    void addOutType_paper(outType out);
     void addOutType(Evaluator::btSettings minSettings);
     void addOutType(Evaluator::pathSettings minSettings);
     void addOutType(Evaluator::sqrSettings minSettings);

@@ -44,12 +44,13 @@ outType& OSquareRoot::c_acc(uint32_t noAccess, uint64_t b) {
         out.rounds += acc.rounds;
         out += acc;
 
-        if(t == T) {
+        if(t == T+1) {
             outType& epoch = addWR(c_permute(), c_update());
             out.rounds += epoch.rounds;
             out += epoch;
             t = 0;
         }
+
     }
     return out;
 }

@@ -9,6 +9,7 @@
 #include "../helper.h"
 #include <cassert>
 #include <utility>
+#include <unordered_map>
 
 class Path : public TreeInterface {
 protected:
@@ -100,11 +101,19 @@ public:
                                                                             Coram(m, b, B, c, s) {}
 
     inline bool recursionCond(uint16_t counter) override {
-        return counter > 0 && m > pow(2, 8);
+        return counter > 0 && m >= pow(2, 8);
     }
 };
 
 class MixedORAM : public Coram {
+    struct params {
+        uint64_t m;
+        uint64_t b;
+        uint16_t B;
+        uint16_t s;
+    };
+private:
+    //std::unordered_map<params, outType*> seen;
 protected:
     uint32_t noAcc;
     bool values;

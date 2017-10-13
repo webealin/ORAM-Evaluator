@@ -22,16 +22,20 @@ void evaluate_fast() {
 void plot()  {
     std::cout << "Plot results:" << std::endl;
     auto* plotter = new Plotter();
-    plotter->plot_acc_elements(1, evalParam{1, 10, 1, 1}, 32, "test");
+    Settings::get().set(0.5, 1.03*1000, 4*10000, 80);
+    plotter->plot_acc_elements(evalParam{5, 24, 1, 1}, 128, "access");
+    //plotter->plot_elements(10, true, evalParam{5, 24, 1, 1}, 128, "access");
     delete plotter;
 }
 
 int main() {
-    std::cout << Mixed_ORAM_slow(1, true, (uint64_t) pow(2, 10), 32, 4, 4, 89, UINT16_MAX) << std::endl;
-    /*measure(run_benchmarks);
-    measure(test_fast_formulas);
+    // set standard parameters
+    Settings::get().set(0.5, 1.03*1000, 4*10000, 80);
+    std::cout << Mixed_ORAM_slow(1, true, (uint64_t) pow(2, 10), 32, 3, 16, 89, UINT16_MAX) << std::endl;
+    //measure(run_benchmarks);
+    /*measure(test_fast_formulas);
     measure(evaluate);
-    measure(evaluate_fast);
-    measure(plot);*/
+    measure(evaluate_fast);*/
+    measure(plot);
     return 0;
 }

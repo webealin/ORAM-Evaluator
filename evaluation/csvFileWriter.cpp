@@ -52,34 +52,57 @@ void CSVFileWriter::addHeader(std::string header) {
     outTime += header;
 }
 
+void CSVFileWriter::addEmpty() {
+    outGates +=  ", ";
+    outTraffic +=  ", ";
+    outRounds +=  ", ";
+    outTime +=  ", ";
+}
+
 void CSVFileWriter::addOutType(Evaluator::btSettings minSettings) {
-    outGates +=  ", " + std::to_string(minSettings.out->gates);
-    outTraffic +=  ", " + std::to_string(minSettings.out->traffic);
-    outRounds +=  ", " + std::to_string(minSettings.out->rounds);
-    outTime +=  ", " + std::to_string(needsTime(*minSettings.out));
+    addOutType(*minSettings.out);
     delete minSettings.out;
 }
 
 void CSVFileWriter::addOutType(Evaluator::pathSettings minSettings) {
-    outGates +=  ", " + std::to_string(minSettings.bt->out->gates);
-    outTraffic +=  ", " + std::to_string(minSettings.bt->out->traffic);
-    outRounds +=  ", " + std::to_string(minSettings.bt->out->rounds);
-    outTime +=  ", " + std::to_string(needsTime(*minSettings.bt->out));
+    addOutType(*minSettings.bt->out);
     delete minSettings.bt->out;
     delete minSettings.bt;
 }
 
 void CSVFileWriter::addOutType(Evaluator::sqrSettings minSettings) {
-    outGates +=  ", " + std::to_string(minSettings.out->gates);
-    outTraffic +=  ", " + std::to_string(minSettings.out->traffic);
-    outRounds +=  ", " + std::to_string(minSettings.out->rounds);
-    outTime +=  ", " + std::to_string(needsTime(*minSettings.out));
+    addOutType(*minSettings.out);
     delete minSettings.out;
 }
 
 void CSVFileWriter::addOutType(outType out) {
-    outGates +=  ", " + std::to_string(out.gates);
-    outTraffic +=  ", " + std::to_string(out.traffic);
+    if(out.gates == UINT64_MAX)
+        outGates += ", ";
+    else outGates +=  ", " + std::to_string(out.gates);
+
+    if(out.traffic == UINT64_MAX)
+        outTraffic += ", ";
+    else outTraffic +=  ", " + std::to_string(out.traffic);
+
     outRounds +=  ", " + std::to_string(out.rounds);
-    outTime +=  ", " + std::to_string(needsTime(out));
+
+    if(needsTime(out) == UINT64_MAX)
+        outTime += ", ";
+    else outTime +=  ", " + std::to_string(needsTime(out));
+}
+
+void CSVFileWriter::addOutType_paper(outType out) {
+    if(out.gates == UINT64_MAX)
+        outGates += ", ";
+    else outGates +=  ", " + std::to_string(out.gates);
+
+    if(out.traffic == UINT64_MAX)
+        outTraffic += ", ";
+    else outTraffic +=  ", " + std::to_string(out.traffic / 8);
+
+    outRounds +=  ", " + std::to_string(out.rounds);
+
+    if(needsTime(out) == UINT64_MAX)
+        outTime += ", ";
+    else outTime +=  ", " + std::to_string(needsTime(out) / 1000);
 }
