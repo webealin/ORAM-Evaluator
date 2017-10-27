@@ -44,17 +44,17 @@ struct StandardBTB : evalParam {
 
 // standard evaluation range for Path ORAM bucket size B
 struct StandardPathB : evalParam {
-    StandardPathB(uint16_t d) : evalParam(4, (uint16_t)(d/2), 1, 2) { }
+    StandardPathB(uint16_t d) : evalParam(4, (uint16_t)(4 + d/2), 1, 2) { }
 };
 
 // standard evaluation range for Path-SC ORAM bucket size B
 struct StandardPathSCB : evalParam {
-    StandardPathSCB(uint16_t d) : evalParam(4, (uint16_t)(d/2), 2, 0) { }
+    StandardPathSCB(uint16_t d) : evalParam(4, (uint16_t)(4 + d/2), 2, 0) { }
 };
 
 // standard evaluation range for SCORAM bucket size B
 struct StandardScoramB : evalParam {
-    StandardScoramB(uint16_t d) : evalParam(6, (uint16_t)(d/2), 1, 2) { }
+    StandardScoramB(uint16_t d) : evalParam(6, (uint16_t)(6 + d/2), 1, 2) { }
 };
 
 struct StandardPathS : evalParam {
@@ -71,9 +71,9 @@ struct StandardScoramS : evalParam {
         (d >= 10 && d <= 24)?
             (uint16_t)(Settings::get().getSecurity() - 15 + ScoramS[(((d % 2 == 1)? d+1 : d) - 10) / 2]) :
             (uint16_t)(Settings::get().getSecurity() + 0.32589*pow(d, 2) - 8.7411*d + 40),
-        (d+1 >= 10 && d+1 <= 24)?
-            (uint16_t)(Settings::get().getSecurity() - 15 + ScoramS[((((d+1) % 2 == 1)? d+1 : d+2) - 10) / 2]) :
-            (uint16_t)(Settings::get().getSecurity() + 0.32589*pow(d+1, 2) - 8.7411*(d+1) + 40),
+        (d >= 10 && d <= 24)?
+            (uint16_t)(Settings::get().getSecurity() - 15 + ScoramS[(((d % 2 == 1)? d+1 : d) - 10) / 2]) :
+            (uint16_t)(Settings::get().getSecurity() + 0.32589*pow(d-1, 2) - 8.7411*(d-1) + 40),
         1, 1) {  }
 };
 

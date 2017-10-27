@@ -243,7 +243,7 @@ outType& Scoram::c_addAndEvict() {
 
 void Coram::build(uint16_t counter) {
     TreeInterface::build(counter);
-    stash = new LinearScanOram(s, b+d+1, (uint16_t)(d+1), false);
+    stash = new LinearScanOram(s, b+d+1, myLog2(m), false);
 }
 
 /**
@@ -255,6 +255,10 @@ ORAM* Coram::createMap(uint64_t newM) {
     return new Coram(newM, c*d, B, c, s);
 }
 
+LinearScanOram* Coram::createBuckets() {
+    return new LinearScanOram(B, b+d+1, myLog2(m), false);
+}
+
 /**
  * ReadAndRemove: reads and removes element with the given id from the ORAM
  * @param b: number of bit to read during RAR (always includes payload and isDummy)
@@ -262,7 +266,7 @@ ORAM* Coram::createMap(uint64_t newM) {
  */
 outType& Coram::c_RAR(uint64_t b) {
     // LUMU(m, b)+rand(d)+dPath+d*(RAR_BO(B, b+1, d) - Y2B(B, b+d+1))
-    return Path::c_RAR(b) + d*(c_Y2B(B, b+d+1));
+    return Path::c_RAR(b) + d*(c_Y2B(B, b+myLog2(m)));
 }
 
 /**
@@ -273,14 +277,10 @@ outType& Coram::c_RAR(uint64_t b) {
  */
 outType& Coram::c_minLCA(uint64_t m, uint64_t b) {
     // b*AND + log(b)*(compEq(b) + mux(b+log(b))) + add(log(b))
-    outType& lca = b*c_lin_gate() + myLog2(b)*(c_comp_eq(b) + c_mux(b+myLog2(b)) + c_adder(myLog2(b)));
-    lca += 2*c_adder(b+1);
+    outType& lca = 2*c_adder(b) + b*c_lin_gate() + myLog2(b)*(c_comp_eq(b) + c_mux(b+myLog2(b)) + c_adder(myLog2(b)));
 
     // m*(LCA(b) + AND + compMag(log(b)) + mux(b+log(b)))
     return m*(lca + 1*c_lin_gate() + c_comp_mag(myLog2(b)) + c_mux(b+myLog2(b)));
-
-    // SCORAM version
-    //return m*(b-1)*c_lin_gate() + (m-1)*(c_comp_mag(b+1) + 1*c_lin_gate() + c_mux(2*b+3));
 }
 
 /**
@@ -324,7 +324,7 @@ outType& Coram::c_PT() {
  * @return costs for eviction on single block
  */
 outType& Coram::c_evictOnceW() {
-    // AND + compEq(log(d)) + mux(bb + log(d)) + Add_LSO(B, bb) + mux(1)
+    // AND + compEq(log(d)) + mux(bb + log(d)) + Add_LSO(B, bb) + mux(1)s
     return 1*c_lin_gate() + c_comp_eq(myLog2(d)) + c_mux(bb+myLog2(d)) + buckets->c_add() + c_mux(1);
 }
 
@@ -333,8 +333,8 @@ outType& Coram::c_evictOnceW() {
  * @return
  */
 outType& Coram::c_evictOnce() {
-    // d*(evictOnceW + compEq(log(d)) + RAR_LSO(B, b+d+1, d) + mux(bb+log(d)))
-    return d*(c_evictOnceW() + c_comp_eq(myLog2(d)) + buckets->c_RAR(b+d+1) + c_mux(bb+myLog2(d)));
+    // d*(evictOnceW + compEq(log(d)) + RAR_LSO(B, b+d, d) + mux(bb+log(d)))
+    return d*(c_evictOnceW() + c_comp_eq(myLog2(d)) + buckets->c_RAR(b+myLog2(m)) + c_mux(bb+myLog2(d)));
 }
 
 /**

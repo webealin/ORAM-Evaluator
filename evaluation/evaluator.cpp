@@ -57,7 +57,7 @@ void Evaluator::print_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t 
 pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, std::string type,
                                        evalParam bParam, evalParam sParam, pathFunc acc) {
     pathSettings minSettings;
-
+    //std::cout << "d: " << myLog2(m) << " bParam min: " << bParam.min << " bParam max: " << bParam.max << " sParam min: " << sParam.min << " sParam max: " << sParam.max << std::endl;
     for(uint16_t stash = sParam.min; stash <= sParam.max; stash = stash*sParam.step_m + sParam.step_p)
         for(uint16_t B = bParam.min; B <= bParam.max; B = B*bParam.step_m + bParam.step_p)
             find_best_Path(noAcc, values, m, b, type, B, stash, minSettings, acc);
@@ -73,6 +73,7 @@ pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, 
     for (uint16_t c = 2; c <= d; c *= 2) {
         for (uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
             outType& out = multiplyWR(noAcc, acc(noAcc, values, m, b, B, c, stash, count));
+            //std::cout << "B: " << B << " stash: " << stash << " c: " << c << " count: " << count << " out: " << out << std::endl;
             if (out < *minSettings.out) {
                 *minSettings.out = {out.gates, out.traffic, out.rounds};
                 minSettings = {type, B, c, count, stash, minSettings.out};

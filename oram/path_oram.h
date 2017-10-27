@@ -20,6 +20,9 @@ public:
     Path(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : ORAM(m, b, b+2*myLog2(m), "Path ORAM"),
                                                                        TreeInterface((uint16_t) (myLog2(m)-1), B, c),
                                                                        s(s) { }
+    Path(uint64_t m, uint64_t b, uint16_t d, uint16_t B, uint16_t c, uint16_t s) : ORAM(m, b, b+myLog2(m)+1+d, "Path ORAM"),
+                                                                       TreeInterface(d, B, c),
+                                                                       s(s) { }
 
     ~Path() override {
         delete stash;
@@ -77,12 +80,13 @@ public:
 
 class Coram : public Path {
 public:
-    Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : ORAM(m, b, b+2*myLog2(m), "Circuit ORAM"),
-                                                                        Path(m, b, B, c, s) { }
+    Coram(uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) : ORAM(m, b, b+2*myLog2(m)+1, "Circuit ORAM"),
+                                                                        Path(m, b,myLog2(m), B, c, s) { }
     void build(uint16_t counter) override;
 
     ORAM* createMap(uint64_t newM) override;
     outType& c_addAndEvict() override;
+    LinearScanOram* createBuckets() override;
 
     outType& c_RAR(uint64_t b) override;
 
