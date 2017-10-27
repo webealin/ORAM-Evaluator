@@ -5,11 +5,12 @@
 #ifndef ORAMEVALUATOR_FILEWRITER_H
 #define ORAMEVALUATOR_FILEWRITER_H
 
-#include "evaluator.h"
 #include <list>
 #include <iostream>
 #include <fstream>
 #include <utility>
+#include "../types/outType.h"
+#include "../types/minSettings.h"
 
 class CSVFileWriter {
 private:
@@ -25,9 +26,7 @@ public:
     void addEmpty();
     void addOutType(outType out);
     void addOutType_paper(outType out);
-    void addOutType(Evaluator::btSettings minSettings);
-    void addOutType(Evaluator::pathSettings minSettings);
-    void addOutType(Evaluator::sqrSettings minSettings);
+    void addOutType(minSettings settings);
     void writeFiles();
     void writeGates();
     void writeTraffic();

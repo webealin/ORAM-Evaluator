@@ -274,9 +274,13 @@ outType& Coram::c_RAR(uint64_t b) {
 outType& Coram::c_minLCA(uint64_t m, uint64_t b) {
     // b*AND + log(b)*(compEq(b) + mux(b+log(b))) + add(log(b))
     outType& lca = b*c_lin_gate() + myLog2(b)*(c_comp_eq(b) + c_mux(b+myLog2(b)) + c_adder(myLog2(b)));
+    lca += 2*c_adder(b+1);
 
     // m*(LCA(b) + AND + compMag(log(b)) + mux(b+log(b)))
     return m*(lca + 1*c_lin_gate() + c_comp_mag(myLog2(b)) + c_mux(b+myLog2(b)));
+
+    // SCORAM version
+    //return m*(b-1)*c_lin_gate() + (m-1)*(c_comp_mag(b+1) + 1*c_lin_gate() + c_mux(2*b+3));
 }
 
 /**
@@ -342,24 +346,44 @@ outType& Coram::c_addAndEvict() {
 }
 
 ORAM *MixedORAM::createMap(uint64_t newM) {
+    std::cout << "\nMixedORAM::createMap: m: " << m << " b: " << b << std::endl;
+    std::cout << "before:" << std::endl;
+    for(auto &it : seen)
+        std::cout << "seen: m: " << it.first.m << " b: " << it.first.b << std::endl;
+
     auto* eval = new Evaluator();
+    auto* thisNewMap = new params(newM, c*d);
+
+    // check if we already evaluated this situation
+    auto it = seen.find(*thisNewMap);
+    if(it != seen.end())
+        std::cout << "gefunden!!" << std::endl;
 
     // buckets and stash of same size!
-    Evaluator::pathSettings coramOut = {UINT16_MAX, new Evaluator::btSettings};
-    eval->find_best_Path(noAcc, values, newM, c*d, B, s, coramOut, Mixed_ORAM_slow);
-    double_t coramTime = needsTime(*coramOut.bt->out);
-    uint16_t coramC = coramOut.bt->c;
-    delete coramOut.bt->out;
-    delete coramOut.bt;
+    auto* coramOut = new pathSettings();
+    eval->find_best_MIXO(noAcc, values, newM, c*d, B, s, *coramOut, seen);
 
-    auto sqrOut = eval->find_best_OSQR(noAcc, values, newM, c*d, acc_OSQR_slow);
-    double_t sqrTime = needsTime(*sqrOut.out);
-    delete sqrOut.out;
+    auto* sqrOut = new minSettings();
+    eval->find_best_OSQR(noAcc, values, newM, c*d, *sqrOut, acc_OSQR_slow);
 
-    if(coramTime < sqrTime) {
-        std::cout << "new mixed ORAM: m: " << newM << std::endl;
-        return new MixedORAM(noAcc, values, newM, c * d, B, coramC, s);
+    if(needsTime(*coramOut->out) < needsTime(*sqrOut->out)) {
+        seen[*thisNewMap] = coramOut;
+        delete sqrOut->out;
+        delete sqrOut;
+        std::cout << "after - CORAM:" << std::endl;
+        for(auto &it : seen)
+            std::cout << "seen: m: " << it.first.m << " b: " << it.first.b << std::endl;
+        return new MixedORAM(noAcc, values, newM, c * d, B, coramOut->c, s, seen);
     }
-    std::cout << "new OSQR ORAM: m: " << newM << std::endl;
+    seen[*thisNewMap] = sqrOut;
+    std::cout << "after - SQR:" << std::endl;
+    for(auto &it : seen)
+        std::cout << "seen: m: " << it.first.m << " b: " << it.first.b << std::endl;
+    delete coramOut->out;
+    delete coramOut;
     return new OSquareRoot(newM, c*d, c);
 }
+
+// was will ich?
+// - prüfen ab welcher Größe SQR besser als CORAM
+// - also auf jedem Level prüfen SQR vs. noch einmal CORAM außen

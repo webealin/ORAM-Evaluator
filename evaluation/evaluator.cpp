@@ -16,7 +16,7 @@ void Evaluator::print_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, 
     std::cout << "Linear Scan: " << find_LinearScan(noRead, noWrite, m, b) << std::endl;
 }
 
-Evaluator::btSettings Evaluator::find_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam,
+btSettings Evaluator::find_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam,
                                                btFunc acc) {
     btSettings minSettings;
 
@@ -54,10 +54,9 @@ void Evaluator::print_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t 
     delete minSettings.out;
 }
 
-Evaluator::pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam,
+pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam,
                                                   evalParam sParam, pathFunc acc) {
-
-    pathSettings minSettings = {UINT16_MAX, new btSettings};
+    pathSettings minSettings;
 
     for(uint16_t stash = sParam.min; stash <= sParam.max; stash = stash*sParam.step_m + sParam.step_p)
         for(uint16_t B = bParam.min; B <= bParam.max; B = B*bParam.step_m + bParam.step_p)
@@ -67,18 +66,16 @@ Evaluator::pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, u
     return minSettings;
 }
 
-Evaluator::pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B,
+pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B,
                                                   uint16_t stash, pathSettings& minSettings, pathFunc acc) {
-
     uint16_t d = myLog2(m);
 
     for (uint16_t c = 2; c <= d; c *= 2) {
         for (uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
             outType& out = multiplyWR(noAcc, acc(noAcc, values, m, b, B, c, stash, count));
-            if (out < *minSettings.bt->out) {
-                *minSettings.bt->out = {out.gates, out.traffic, out.rounds};
-                *minSettings.bt = {B, c, count, minSettings.bt->out};
-                minSettings = {stash, minSettings.bt};
+            if (out < *minSettings.out) {
+                *minSettings.out = {out.gates, out.traffic, out.rounds};
+                minSettings = {B, c, count, stash, minSettings.out};
             }
             delete &out;
         }
@@ -89,35 +86,59 @@ Evaluator::pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, u
 void Evaluator::print_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
                                                   pathFunc acc) {
     clock_t start = clock();
-    pathSettings minSettings = find_best_Path(noAcc, values, m, b, bParam, sParam, acc);
+    pathSettings min = find_best_Path(noAcc, values, m, b, bParam, sParam, acc);
     float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << type << ": B: " << minSettings.bt->B << " c: " << minSettings.bt->c << " count: " << minSettings.bt->count << " stash: " << minSettings.stash << " out: " << minSettings.bt->out << " time needed: " << elapsed << std::endl;
-    delete minSettings.bt->out;
-    delete minSettings.bt;
+    std::cout << type << ": B: " << min.B << " c: " << min.c << " count: " << min.count << " stash: " << min.stash << " out: " << min.out << " time needed: " << elapsed << std::endl;
+    delete min.out;
 }
 
-Evaluator::sqrSettings Evaluator::find_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc) {
+minSettings Evaluator::find_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, minSettings& min, sqrFunc acc) {
 
-    sqrSettings minSettings = {UINT16_MAX, UINT16_MAX, new outType};
     for (uint16_t c = 2; c <= myLog2(m); c *= 2) {
         for (uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
             outType& out = 1*acc(noAcc, values, m, b, c, count);
+            if (out < *min.out) {
+                *min.out = {out.gates, out.traffic, out.rounds};
+                min = {c, count, min.out};
+            }
+            delete &out;
+        }
+    }
+    return min;
+}
+
+minSettings Evaluator::find_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc) {
+    minSettings min;
+    find_best_OSQR(noAcc, values, m, b, min, acc);
+    return min;
+}
+
+void Evaluator::print_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc) {
+    clock_t start = clock();
+    minSettings min;
+    find_best_OSQR(noAcc, values, m, b, min, acc);
+    float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
+    std::cout << "Optimized Square-Root ORAM: c: " << min.c << " count: " << min.count << " out: " << min.out << " time needed: " << elapsed << std::endl;
+    delete min.out;
+}
+
+pathSettings Evaluator::find_best_MIXO(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B,
+                                       uint16_t stash, pathSettings& minSettings, MixedORAM::evalMap& seen) {
+
+    for (uint16_t c = 2; c <= myLog2(m); c *= 2) {
+        for (uint16_t count = 1; count <= floor(log(m)/log(c)); count++) {
+            MixedORAM* oram = ORAMFactory::create_Mixed_ORAM(noAcc, values, m, b, B, c, stash, count, seen);
+            outType& out = multiplyWR(noAcc, oram->c_amortized(noAcc, values));
+            delete oram;
+
             if (out < *minSettings.out) {
                 *minSettings.out = {out.gates, out.traffic, out.rounds};
-                minSettings = {c, count, minSettings.out};
+                minSettings = {B, c, count, stash, minSettings.out};
             }
             delete &out;
         }
     }
     return minSettings;
-}
-
-void Evaluator::print_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc) {
-    clock_t start = clock();
-    sqrSettings minSettings = find_best_OSQR(noAcc, values, m, b, acc);
-    float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << "Optimized Square-Root ORAM: c: " << minSettings.c << " count: " << minSettings.count << " out: " << minSettings.out << " time needed: " << elapsed << std::endl;
-    delete minSettings.out;
 }
 
 void Evaluator::evaluate(uint32_t noRead, uint32_t noWrite, bool values, uint64_t m, uint64_t b, uint16_t d, funcTypes func) {

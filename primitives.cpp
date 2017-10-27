@@ -156,7 +156,7 @@ outType& c_comp_mag(uint64_t b) {
 outType& c_LZC(uint64_t b) {
     assert(b != 0);
     // (b-1)*OR + sum (i=0, log(b)): (b/2^(i+1))*c_add(i)
-    uint64_t gates = (uint64_t)(floor((double) b/2))* myLog2(b)+b-1;     // TODO: Formel Unsinn. Neu machen!
+    uint64_t gates = 3*b-2; //(uint64_t)(floor((double) b/2))* myLog2(b)+b-1;
     auto* out = new outType;
     *out = {gates, 256*gates, 0};
     return *out;

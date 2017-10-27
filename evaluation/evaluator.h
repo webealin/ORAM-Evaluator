@@ -13,29 +13,10 @@
 #include "../types/evalParam.h"
 #include "../settings.h"
 #include "access_functions.h"
+#include "../types/minSettings.h"
 
 class Evaluator {
 public:
-    struct btSettings {
-        uint16_t B;
-        uint16_t c;
-        uint16_t count;
-        outType* out;
-        btSettings() : B(UINT16_MAX), c(UINT16_MAX), count(UINT16_MAX), out(new outType) { }
-        btSettings(uint16_t B, uint16_t c, uint16_t count, outType* out) : B(B), c(c), count(count), out(out) { }
-    };
-
-    struct pathSettings {
-        uint16_t stash;
-        btSettings* bt;
-    };
-
-    struct sqrSettings {
-        uint16_t c;
-        uint16_t count;
-        outType* out;
-    };
-
     typedef outType& (*btFunc)(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count);
     typedef outType& (*pathFunc)(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count);
     typedef outType& (*sqrFunc)(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t c, uint16_t count);
@@ -63,7 +44,10 @@ public:
     pathSettings find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam, evalParam sParam, pathFunc acc);
     pathSettings find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t stash, pathSettings& minSettings, pathFunc acc);
 
-    sqrSettings find_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc);
+    minSettings find_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc);
+    minSettings find_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, minSettings& min, sqrFunc acc);
+
+    pathSettings find_best_MIXO(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t stash, pathSettings& minSettings, MixedORAM::evalMap& seen);
 
     void evaluate_acc_exact(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
     void evaluate_acc_exact_fast(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b);
@@ -77,6 +61,8 @@ private:
     void print_best_OSQR(uint32_t noAcc, bool values, uint64_t m, uint64_t b, sqrFunc acc);
 
     void evaluate(uint32_t noRead, uint32_t noWrite, bool values, uint64_t m, uint64_t b, uint16_t d, funcTypes func);
+
+void evaluate(uint32_t noSecretRead, uint32_t noConstRead, uint32_t noSecretWrite, uint32_t noConstWrite, bool values, uint64_t m, uint64_t b, uint16_t d, funcTypes func);
 };
 
 #endif //ORAMEVALUATOR_EVALUATOR_H

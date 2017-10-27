@@ -59,20 +59,9 @@ void CSVFileWriter::addEmpty() {
     outTime +=  ", ";
 }
 
-void CSVFileWriter::addOutType(Evaluator::btSettings minSettings) {
-    addOutType(*minSettings.out);
-    delete minSettings.out;
-}
-
-void CSVFileWriter::addOutType(Evaluator::pathSettings minSettings) {
-    addOutType(*minSettings.bt->out);
-    delete minSettings.bt->out;
-    delete minSettings.bt;
-}
-
-void CSVFileWriter::addOutType(Evaluator::sqrSettings minSettings) {
-    addOutType(*minSettings.out);
-    delete minSettings.out;
+void CSVFileWriter::addOutType(minSettings settings) {
+    addOutType(*settings.out);
+    delete settings.out;
 }
 
 void CSVFileWriter::addOutType(outType out) {

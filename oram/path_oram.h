@@ -7,6 +7,7 @@
 
 #include "binary_tree_oram.h"
 #include "../helper.h"
+#include "../types/minSettings.h"
 #include <cassert>
 #include <utility>
 #include <unordered_map>
@@ -106,20 +107,38 @@ public:
 };
 
 class MixedORAM : public Coram {
+public:
     struct params {
         uint64_t m;
         uint64_t b;
-        uint16_t B;
-        uint16_t s;
+        params(uint64_t m, uint64_t b) : m(m), b(b) { }
     };
-private:
-    //std::unordered_map<params, outType*> seen;
+
+    struct paramsHash {
+        std::size_t operator()(const params& p) const {
+            return std::hash<uint64_t>()(p.m) ^ (std::hash<uint64_t>()(p.b) << 1);
+        }
+    };
+
+    struct paramsEqual {
+        bool operator()(const params& lhs, const params& rhs) const {
+            return lhs.m == rhs.m && lhs.b == rhs.b;
+        }
+    };
+
+    typedef std::unordered_map<params, minSettings*, paramsHash, paramsEqual> evalMap;
+
 protected:
     uint32_t noAcc;
     bool values;
+    evalMap& seen;
 public:
-    MixedORAM(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s) :
-            ORAM(m, b, b+2*myLog2(m), "Mixed ORAM"), Coram(m, b, B, c, s), noAcc(noAcc), values(values) { }
+    MixedORAM(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t s, evalMap& seen) :
+            ORAM(m, b, b+2*myLog2(m), "Mixed ORAM"), Coram(m, b, B, c, s), noAcc(noAcc), values(values), seen(seen) {
+        std::cout << "new Mixed ORAM m: " <<  m << " b: " << b << std::endl;
+        for(auto &it : seen)
+            std::cout << "seen: m: " << it.first.m << " b: " << it.first.b << std::endl;
+    }
 
     ORAM* createMap(uint64_t newM) override;
 };

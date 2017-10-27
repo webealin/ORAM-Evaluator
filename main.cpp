@@ -31,11 +31,11 @@ void plot()  {
 int main() {
     // set standard parameters
     Settings::get().set(0.5, 1.03*1000, 4*10000, 80);
-    std::cout << Mixed_ORAM_slow(1, true, (uint64_t) pow(2, 10), 32, 3, 16, 89, UINT16_MAX) << std::endl;
-    //measure(run_benchmarks);
-    /*measure(test_fast_formulas);
-    measure(evaluate);
-    measure(evaluate_fast);*/
-    measure(plot);
+    //std::cout << Mixed_ORAM_slow(1, true, (uint64_t) pow(2, 10), 32, 3, 16, 89, UINT16_MAX) << std::endl;
+    measure(run_benchmarks);
+    //measure(test_fast_formulas);
+    /*measure(evaluate);
+    measure(evaluate_fast);
+    measure(plot);*/
     return 0;
 }

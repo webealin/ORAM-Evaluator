@@ -5,6 +5,7 @@
 #include "paper_benchmarks.h"
 #include "evaluation/csvFileWriter.h"
 #include "evaluation/access_functions.h"
+#include "oram/testOram.h"
 
 void test_GKK() {
     std::cout << "GKK Benchmarks: use old formulas, no fixed bucket-sizes, no counter, and no dynamic block-size" << std::endl;
@@ -21,6 +22,21 @@ void test_CORAM() {
     ORAMFactory::acc_Path("Scoram", 30, 32, 6, 16, 141, 8);
     ORAMFactory::acc_Path("CORAM", 30, 32, 3, 16, 89, 8);
     ORAMFactory::acc_Path("CORAM", 30, 32, 2, 16, 33, 8);
+
+
+    auto* oram = new testOram(pow(2, 30), 32, 3, 16, 89);
+    oram->build(8);
+    outType& out = oram->c_acc(32);
+    std::cout << "test Oram" << ": d = " << 30 << " b = " << 32 << " B = " << 3 << " c = " << 16 << " stash = " << 89 << ": " << out << std::endl;
+    delete &out;
+    delete oram;
+
+    oram = new testOram(pow(2, 30), 32, 2, 16, 33);
+    oram->build(8);
+    out = oram->c_acc(32);
+    std::cout << "test Oram" << ": d = " << 30 << " b = " << 32 << " B = " << 2 << " c = " << 16 << " stash = " << 33 << ": " << out << std::endl;
+    delete &out;
+    delete oram;
 }
 
 void plot_add_TLS(uint64_t m, uint64_t b, CSVFileWriter *writer) {
@@ -61,6 +77,16 @@ void SQORAM_add_CORAM(uint64_t m, uint64_t b, CSVFileWriter* writer) {
     delete path;
 }
 
+void SQORAM_add_CORAM2(uint64_t m, uint64_t b, CSVFileWriter* writer) {
+    auto* oram = new testOram(m, b, 3, 8, 89);
+    oram->build(UINT16_MAX);
+    outType& out = oram->c_acc(b);
+    writer->addOutType_paper(out);
+    delete &out;
+    delete oram;
+}
+
+
 void SQORAM_add_SQORAM(uint64_t m, uint64_t b, uint32_t acc, CSVFileWriter* writer) {
     outType& out = divideWR(acc_OSQR_slow(acc, false, m, b, 8, UINT16_MAX), acc);
     writer->addOutType_paper(out);
@@ -72,7 +98,7 @@ void plot_SQORAM() {
     Settings::get().set(0.5, 1.03*1000, 10000*4, 80);
 
     CSVFileWriter* writer = new CSVFileWriter("SQR");
-    writer->addHeader("d, TLS 128, SQR 128, CORAM 128");
+    writer->addHeader("d, TLS 128, SQR 128, CORAM 128, CORAM 2");
     for(uint16_t d = 2; d <= 20; d++) {
         writer->addLine(d);
         auto m = (uint64_t) pow(2, d);
@@ -81,6 +107,7 @@ void plot_SQORAM() {
         plot_add_TLS(m, 128, writer);
         SQORAM_add_SQORAM(m, 128, acc, writer);
         SQORAM_add_CORAM(m, 128, writer);
+        SQORAM_add_CORAM2(m, 128, writer);
         std::cout << "Plotted d = " << d << std::endl;
     }
     writer->writeFiles();
@@ -92,7 +119,7 @@ void plot_scalingORAM() {
     Settings::get().set(0.5, 500, 10000*8, 80);
 
     CSVFileWriter* writer = new CSVFileWriter("scalingORAM");
-    writer->addHeader("d, TLS, SQR, CORAM");
+    writer->addHeader("d, TLS, SQR, CORAM, CORAM2");
     for(uint16_t d = 5; d <= 24; d++) {
         writer->addLine(d);
         auto m = (uint64_t) pow(2, d);
@@ -104,6 +131,7 @@ void plot_scalingORAM() {
 
         SQORAM_add_SQORAM(m, 32, acc, writer);
         SQORAM_add_CORAM(m, 32, writer);
+        SQORAM_add_CORAM2(m, 32, writer);
         std::cout << "Plotted d = " << d << std::endl;
     }
     writer->writeFiles();
