@@ -20,7 +20,7 @@ protected:
     uint16_t d;                   // depth of tree
     LinearScanOram* buckets{};    // placeholder ORAM for buckets
 public:
-    TreeInterface(uint16_t d, uint16_t B, uint16_t c) : extendedORAM(), MapBasedORAM(c), B(B), d(d) { }
+    TreeInterface(uint16_t d, uint16_t B, uint16_t c) : MapBasedORAM(c), extendedORAM(), B(B), d(d) { }
     void build(uint16_t counter) override;
 
     ~TreeInterface() override {

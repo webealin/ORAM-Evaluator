@@ -10,10 +10,10 @@ void Plotter::plot(uint16_t noAcc, bool values, uint16_t d, uint64_t b, CSVFileW
     writer->addOutType(find_LinearScan(noAcc, 0, m, b));
     writer->addOutType(find_LinearScan(0, noAcc, m, b));
     writer->addOutType(find_best_BT(noAcc, values, m, b, StandardBTB(d), func.btF));
-    writer->addOutType(find_best_Path(noAcc, values, m, b, StandardPathB(d), StandardPathS(), func.pathF));
-    writer->addOutType(find_best_Path(noAcc, values, m, b, StandardPathSCB(d), StandardPathS(), func.pathSCF));
-    writer->addOutType(find_best_Path(noAcc, values, m, b, StandardScoramB(d), StandardScoramS(d), func.SCORAMF));
-    writer->addOutType(find_best_Path(noAcc, values, m, b, StandardPathB(d), StandardPathS(), func.CORAMF));
+    writer->addOutType(find_best_Path(noAcc, values, m, b, "Path ORAM", StandardPathB(d), StandardPathS(), func.pathF));
+    writer->addOutType(find_best_Path(noAcc, values, m, b, "Path-SC ORAM", StandardPathSCB(d), StandardPathS(), func.pathSCF));
+    writer->addOutType(find_best_Path(noAcc, values, m, b, "SCORAM", StandardScoramB(d), StandardScoramS(d), func.SCORAMF));
+    writer->addOutType(find_best_Path(noAcc, values, m, b, "Circuit ORAM", StandardPathB(d), StandardPathS(), func.CORAMF));
 
     auto acc = (uint32_t) (floor(sqrt(m * d)));     // TODO
     writer->addOutType(divideWR(*find_best_OSQR(acc, values, m, b, func.OSQRF).out, acc));        // TODO mixed ORAM!

@@ -4,16 +4,16 @@
 
 #include "evaluator.h"
 
-outType Evaluator::find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
+minSettings Evaluator::find_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
     outType& out = addWR(multiplyWR(noRead, TrivialLinearScan::c_read(m, b)),
                          multiplyWR(noWrite, TrivialLinearScan::c_write(m, b)));
-    outType ret = {out.gates, out.traffic, out.rounds};
-    delete &out;
-    return ret;
+    return minSettings("Trivial Linear Scan", 0, 0, &out);
 }
 
 void Evaluator::print_LinearScan(uint32_t noRead, uint32_t noWrite, uint64_t m, uint64_t b) {
-    std::cout << "Linear Scan: " << find_LinearScan(noRead, noWrite, m, b) << std::endl;
+    minSettings settings = find_LinearScan(noRead, noWrite, m, b);
+    std::cout << "Linear Scan: " << *settings.out << std::endl;
+    delete settings.out;
 }
 
 btSettings Evaluator::find_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam,
@@ -38,7 +38,7 @@ void Evaluator::find_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t b
         outType &out = multiplyWR(noAcc, acc(noAcc, values, m, b, B, c, count));
         if (out < *minSettings.out) {
             *minSettings.out = {out.gates, out.traffic, out.rounds};
-            minSettings = {B, c, count, minSettings.out};
+            minSettings = {"Binary Tree ORAM", B, c, count, minSettings.out};
         }
         delete &out;
     }
@@ -54,19 +54,19 @@ void Evaluator::print_best_BT(uint32_t noAcc, bool values, uint64_t m, uint64_t 
     delete minSettings.out;
 }
 
-pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, evalParam bParam,
-                                                  evalParam sParam, pathFunc acc) {
+pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, std::string type,
+                                       evalParam bParam, evalParam sParam, pathFunc acc) {
     pathSettings minSettings;
 
     for(uint16_t stash = sParam.min; stash <= sParam.max; stash = stash*sParam.step_m + sParam.step_p)
         for(uint16_t B = bParam.min; B <= bParam.max; B = B*bParam.step_m + bParam.step_p)
-            find_best_Path(noAcc, values, m, b, B, stash, minSettings, acc);
+            find_best_Path(noAcc, values, m, b, type, B, stash, minSettings, acc);
 
 
     return minSettings;
 }
 
-pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B,
+pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, std::string type, uint16_t B,
                                                   uint16_t stash, pathSettings& minSettings, pathFunc acc) {
     uint16_t d = myLog2(m);
 
@@ -75,7 +75,7 @@ pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, 
             outType& out = multiplyWR(noAcc, acc(noAcc, values, m, b, B, c, stash, count));
             if (out < *minSettings.out) {
                 *minSettings.out = {out.gates, out.traffic, out.rounds};
-                minSettings = {B, c, count, stash, minSettings.out};
+                minSettings = {type, B, c, count, stash, minSettings.out};
             }
             delete &out;
         }
@@ -86,7 +86,7 @@ pathSettings Evaluator::find_best_Path(uint32_t noAcc, bool values, uint64_t m, 
 void Evaluator::print_best_Path(uint32_t noAcc, bool values, uint64_t m, uint64_t b, std::string type, evalParam bParam, evalParam sParam,
                                                   pathFunc acc) {
     clock_t start = clock();
-    pathSettings min = find_best_Path(noAcc, values, m, b, bParam, sParam, acc);
+    pathSettings min = find_best_Path(noAcc, values, m, b, type, bParam, sParam, acc);
     float elapsed = (float)(clock() - start) / CLOCKS_PER_SEC;
     std::cout << type << ": B: " << min.B << " c: " << min.c << " count: " << min.count << " stash: " << min.stash << " out: " << min.out << " time needed: " << elapsed << std::endl;
     delete min.out;
@@ -99,7 +99,7 @@ minSettings Evaluator::find_best_OSQR(uint32_t noAcc, bool values, uint64_t m, u
             outType& out = 1*acc(noAcc, values, m, b, c, count);
             if (out < *min.out) {
                 *min.out = {out.gates, out.traffic, out.rounds};
-                min = {c, count, min.out};
+                min = {"Optimized Square Root ORAM", c, count, min.out};
             }
             delete &out;
         }
@@ -133,7 +133,7 @@ pathSettings Evaluator::find_best_MIXO(uint32_t noAcc, bool values, uint64_t m, 
 
             if (out < *minSettings.out) {
                 *minSettings.out = {out.gates, out.traffic, out.rounds};
-                minSettings = {B, c, count, stash, minSettings.out};
+                minSettings = {"Mixed ORAM", B, c, count, stash, minSettings.out};
             }
             delete &out;
         }
@@ -165,7 +165,7 @@ void Evaluator::evaluate_exact(uint32_t noRead, uint32_t noWrite, bool values, u
     uint16_t d = myLog2(m);
     std::cout << "Evaluate: noRead: " << noRead << " noWrite: " << noWrite << " values: " << values << " d: " << d << " b: " << b << std::endl;
     evaluate(noRead, noWrite, values, m, b, d, slow_func);
-    print_best_Path(noRead+noWrite, values, m, b, "Mixed ORAM", StandardPathB(d), StandardPathS(), Mixed_ORAM_slow);
+    //print_best_Path(noRead+noWrite, values, m, b, "Mixed ORAM", StandardPathB(d), StandardPathS(), Mixed_ORAM_slow);
     std::cout << std::endl;
 }
 
@@ -183,4 +183,33 @@ void Evaluator::evaluate_exact_fast(uint32_t noRead, uint32_t noWrite, bool valu
     evaluate(noRead, noWrite, values, m, b, d, fast_func);
     //print_best_Path(noRead+noWrite, values, m, b, "Mixed ORAM", StandardPathB(d), StandardPathS(), Mixed_ORAM_fast);      // TODO
     std::cout << std::endl;
+}
+
+minSettings Evaluator::evaluate(uint32_t noSecretRead, uint32_t noConstRead, uint32_t noSecretWrite, uint32_t noConstWrite,
+                         bool values, uint64_t m, uint64_t b) {
+    uint32_t noAcc = noSecretRead + noConstRead + noSecretWrite + noConstWrite;
+
+    funcTypes func = slow_func;             // TODO
+    minSettings lsRes = find_LinearScan(noSecretRead, noSecretWrite, m, b);
+    std::cout << "\nTrivial Linear Scan result: " << *lsRes.out << std::endl;
+    pathSettings coramRes = find_best_Path(noAcc, values, m, b, "Circuit ORAM", StandardPathB(myLog2(m)), StandardPathS(), func.CORAMF);
+    std::cout << "Circuit ORAM result: " << *coramRes.out << std::endl;
+    minSettings osqrRes = find_best_OSQR(noAcc, values, m, b, func.OSQRF);
+    std::cout << "Optimized Square Root ORAM result: " << *osqrRes.out << "\n" << std::endl;
+
+    if(*lsRes.out < *coramRes.out && *lsRes.out < *osqrRes.out) {
+        delete coramRes.out;
+        delete osqrRes.out;
+        return lsRes;
+    }
+
+    if(*coramRes.out < *osqrRes.out) {
+        delete lsRes.out;
+        delete osqrRes.out;
+        return coramRes;
+    }
+
+    delete coramRes.out;
+    delete lsRes.out;
+    return osqrRes;
 }

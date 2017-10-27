@@ -20,6 +20,13 @@ inline outType& acc_BT_slow(uint32_t noAcc, bool dummy, uint64_t m, uint64_t b, 
 
 inline outType& BT_slow(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
     BinaryTree* oram = ORAMFactory::create_BT(m, b, B, c, count);
+    outType& out = addWR(oram->c_init(values), multiplyWR(noAcc, oram->c_acc(b)));
+    delete oram;
+    return out;
+}
+
+inline outType& BT_slow_amortized(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t count) {
+    BinaryTree* oram = ORAMFactory::create_BT(m, b, B, c, count);
     outType& out = oram->c_amortized(noAcc, values);
     delete oram;
     return out;
@@ -41,6 +48,13 @@ inline outType& acc_Path_slow(uint32_t noAcc, bool dummy, uint64_t m, uint64_t b
 }
 
 inline outType& Path_slow(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+    Path* oram = ORAMFactory::create_Path("Path", m, b, B, c, stash, count);
+    outType& out = addWR(oram->c_init(values), multiplyWR(noAcc, oram->c_acc(b)));
+    delete oram;
+    return out;
+}
+
+inline outType& Path_slow_amortized(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Path* oram = ORAMFactory::create_Path("Path", m, b, B, c, stash, count);
     outType& out = oram->c_amortized(noAcc, values);
     delete oram;
@@ -64,6 +78,13 @@ inline outType& acc_PathSC_slow(uint32_t noAcc, bool dummy, uint64_t m, uint64_t
 
 inline outType& PathSC_slow(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     PathSC* oram = (PathSC*) ORAMFactory::create_Path("PathSC", m, b, B, c, stash, count);
+    outType& out = addWR(oram->c_init(values), multiplyWR(noAcc, oram->c_acc(b)));
+    delete oram;
+    return out;
+}
+
+inline outType& PathSC_slow_amortized(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+    PathSC* oram = (PathSC*) ORAMFactory::create_Path("PathSC", m, b, B, c, stash, count);
     outType& out = oram->c_amortized(noAcc, values);
     delete oram;
     return out;
@@ -85,6 +106,13 @@ inline outType& acc_SCORAM_slow(uint32_t noAcc, bool dummy, uint64_t m, uint64_t
 }
 
 inline outType& SCORAM_slow(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+    Scoram* oram = (Scoram*) ORAMFactory::create_Path("Scoram", m, b, B, c, stash, count);
+    outType& out = addWR(oram->c_init(values), multiplyWR(noAcc, oram->c_acc(b)));
+    delete oram;
+    return out;
+}
+
+inline outType& SCORAM_slow_amortized(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Scoram* oram = (Scoram*) ORAMFactory::create_Path("Scoram", m, b, B, c, stash, count);
     outType& out = oram->c_amortized(noAcc, values);
     delete oram;
@@ -108,6 +136,13 @@ inline outType& acc_CORAM_slow(uint32_t noAcc, bool dummy, uint64_t m, uint64_t 
 
 inline outType& CORAM_slow(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
     Coram* oram = (Coram*) ORAMFactory::create_Path("CORAM", m, b, B, c, stash, count);
+    outType& out = addWR(oram->c_init(values), multiplyWR(noAcc, oram->c_acc(b)));
+    delete oram;
+    return out;
+}
+
+inline outType& CORAM_slow_amortized(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t B, uint16_t c, uint16_t stash, uint16_t count) {
+    Coram* oram = (Coram*) ORAMFactory::create_Path("CORAM", m, b, B, c, stash, count);
     outType& out = oram->c_amortized(noAcc, values);
     delete oram;
     return out;
@@ -129,6 +164,13 @@ inline outType& acc_OSQR_slow(uint32_t noAcc, bool dummy, uint64_t m, uint64_t b
 }
 
 inline outType& OSQR_slow(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t c, uint16_t count) {
+    OSquareRoot* oram = ORAMFactory::create_OSQR(m, b, c, count);
+    outType& out = addWR(oram->c_init(values), multiplyWR(noAcc, oram->c_acc(b)));
+    delete oram;
+    return out;
+}
+
+inline outType& OSQR_slow_amortized(uint32_t noAcc, bool values, uint64_t m, uint64_t b, uint16_t c, uint16_t count) {
     OSquareRoot* oram = ORAMFactory::create_OSQR(m, b, c, count);
     outType& out = oram->c_amortized(noAcc, values);
     delete oram;
